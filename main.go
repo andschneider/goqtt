@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -15,15 +16,26 @@ func main() {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	pack := create()
 
+	//create connection packet
 	buf := new(bytes.Buffer)
-	pack.Write(buf)
+	cpack := createConPacket()
+	cpack.Write(buf)
 
 	fmt.Println(buf.String())
 	conn.Write(buf.Bytes())
+	fmt.Println("connected")
+	time.Sleep(1 * time.Second)
 
-	mustCopy(os.Stdout, conn)
+	//create subscription packet
+	buf = new(bytes.Buffer)
+	spack := createSubPacket()
+	spack.Write(buf)
+	fmt.Println(buf.String())
+	conn.Write(buf.Bytes())
+	for {
+		mustCopy(os.Stdout, conn)
+	}
 }
 
 func mustCopy(dst io.Writer, src io.Reader) {

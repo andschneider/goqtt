@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -28,24 +27,17 @@ type FixedHeader struct {
 	RemainingLength int
 }
 
-func create() ConnectPacket {
+func createConPacket() ConnectPacket {
 	fh := FixedHeader{MessageType: MessageType}
 	cp := ConnectPacket{FixedHeader: fh}
 
 	cp.ProtocolName = []byte{0, 4, 77, 81, 84, 84} // "04MQTT"
-	cp.ProtocolVersion = MQTT5
+	cp.ProtocolVersion = MQTT3
 	cp.ConnectFlags = 2
 	cp.KeepAlive = []byte{0, 60}
-	cp.ClientIdentifier = "andr"
+	cp.ClientIdentifier = "andrew"
 
 	return cp
-}
-
-func (fh *FixedHeader) WriteHeader() bytes.Buffer {
-	var header bytes.Buffer
-	header.WriteByte(fh.MessageType)
-	header.Write(encodeLength(fh.RemainingLength))
-	return header
 }
 
 func (c *ConnectPacket) Write(w io.Writer) error {
@@ -69,29 +61,4 @@ func (c *ConnectPacket) Write(w io.Writer) error {
 	_, err = packet.WriteTo(w)
 
 	return err
-}
-
-func encodeLength(length int) []byte {
-	var encLength []byte
-	for {
-		digit := byte(length % 128)
-		length /= 128
-		if length > 0 {
-			digit |= 0x80
-		}
-		encLength = append(encLength, digit)
-		if length == 0 {
-			break
-		}
-	}
-	return encLength
-}
-
-func encodeClientId(ci string) []byte {
-	cb := []byte(ci)
-	l := make([]byte, 2)
-	binary.BigEndian.PutUint16(l, uint16(len(cb)))
-	test := append(l, cb...)
-	fmt.Println("CID", test)
-	return test
 }

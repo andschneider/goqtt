@@ -7,7 +7,7 @@ import (
 )
 
 func TestConnectPacket(t *testing.T) {
-	cp := create()
+	cp := createConPacket()
 	// fmt.Println(cp)
 	fo, err := os.Create("output.txt")
 	if err != nil {
@@ -15,5 +15,11 @@ func TestConnectPacket(t *testing.T) {
 	}
 	cp.Write(fo)
 	// cp.Write(os.Stdout)
+	fmt.Println()
+}
+func TestSubscribePacket(t *testing.T) {
+	sp := createSubPacket()
+	// fmt.Println(sp)
+	sp.Write(os.Stdout)
 	fmt.Println()
 }
