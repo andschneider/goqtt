@@ -14,7 +14,7 @@ type SubscribePacket struct {
 }
 
 func createSubPacket() SubscribePacket {
-	fh := FixedHeader{MessageType: 128}
+	fh := FixedHeader{MessageType: 130}
 	sp := SubscribePacket{FixedHeader: fh}
 
 	sp.MessageId = []byte{0, 1}
