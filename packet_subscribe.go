@@ -13,32 +13,32 @@ type SubscribePacket struct {
 	Qos       []byte
 }
 
-func createSubPacket() SubscribePacket {
-	fh := FixedHeader{MessageType: 130}
-	sp := SubscribePacket{FixedHeader: fh}
-
+func CreateSubscribePacket(topic string) (sp SubscribePacket) {
+	sp.FixedHeader = FixedHeader{MessageType: "SUBSCRIBE"}
 	sp.MessageId = []byte{0, 1}
-	sp.Topics = []string{"test/topic"}
+	sp.Topics = []string{topic}
 	sp.Qos = []byte{0}
-
-	return sp
+	return
 }
 
-func (s *SubscribePacket) Write(w io.Writer) error {
+func (s *SubscribePacket) Write(w io.Writer, v bool) error {
 	var body bytes.Buffer
 	var err error
 
 	body.Write(s.MessageId)
 	for i, topic := range s.Topics {
-		body.Write(encodeClientId(topic))
+		body.Write(encodeString(topic))
 		body.WriteByte(s.Qos[i])
 	}
-	fmt.Println("BODY", body)
 
 	s.FixedHeader.RemainingLength = body.Len()
 	packet := s.FixedHeader.WriteHeader()
 	packet.Write(body.Bytes())
-	fmt.Println("PACKET", packet)
+
+	if v {
+		fmt.Println("BODY", body)
+		fmt.Println("PACKET", packet)
+	}
 	_, err = packet.WriteTo(w)
 
 	return err

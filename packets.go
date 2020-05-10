@@ -3,13 +3,32 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 )
 
-func (fh *FixedHeader) WriteHeader() bytes.Buffer {
-	var header bytes.Buffer
-	header.WriteByte(fh.MessageType)
+const (
+	MQTT5 = 5 // 0000101 in binary
+	MQTT3 = 4 // 0000100 in binary
+)
+
+var MessageTypes = map[string]byte{
+	"CONNECT":   16,  // 00010000 in binary
+	"SUBSCRIBE": 130, // 10000010 in binary
+}
+
+type FixedHeader struct {
+	MessageType     string
+	RemainingLength int
+}
+
+func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
+	t, ok := MessageTypes[fh.MessageType]
+	if !ok {
+		fmt.Println("wrong message type, must be ...") // TODO: make this better
+	}
+	header.WriteByte(t)
 	header.Write(encodeLength(fh.RemainingLength))
-	return header
+	return
 }
 
 func encodeLength(length int) []byte {
@@ -28,9 +47,9 @@ func encodeLength(length int) []byte {
 	return encLength
 }
 
-func encodeClientId(ci string) []byte {
-	cb := []byte(ci)
-	l := make([]byte, 2)
-	binary.BigEndian.PutUint16(l, uint16(len(cb)))
-	return append(l, cb...)
+func encodeString(s string) []byte {
+	b := []byte(s)
+	e := make([]byte, 2)
+	binary.BigEndian.PutUint16(e, uint16(len(b)))
+	return append(e, b...)
 }

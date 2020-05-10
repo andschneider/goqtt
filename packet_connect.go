@@ -6,12 +6,6 @@ import (
 	"io"
 )
 
-const (
-	MQTT5       = 5  // 0000101 in binary
-	MQTT3       = 4  // 0000100 in binary
-	MessageType = 16 // 0010000 in binary
-)
-
 type ConnectPacket struct {
 	FixedHeader
 	ProtocolName    []byte
@@ -22,42 +16,34 @@ type ConnectPacket struct {
 	ClientIdentifier string
 }
 
-type FixedHeader struct {
-	MessageType     byte
-	RemainingLength int
-}
-
-func createConPacket() ConnectPacket {
-	fh := FixedHeader{MessageType: MessageType}
-	cp := ConnectPacket{FixedHeader: fh}
-
+func CreateConnectPacket() (cp ConnectPacket) {
+	cp.FixedHeader = FixedHeader{MessageType: "CONNECT"}
 	cp.ProtocolName = []byte{0, 4, 77, 81, 84, 84} // "04MQTT"
 	cp.ProtocolVersion = MQTT3
 	cp.ConnectFlags = 2
 	cp.KeepAlive = []byte{0, 60}
 	cp.ClientIdentifier = "andrew"
-
-	return cp
+	return
 }
 
-func (c *ConnectPacket) Write(w io.Writer) error {
+func (c *ConnectPacket) Write(w io.Writer, v bool) error {
 	var body bytes.Buffer
 	var err error
 
-	fmt.Println("BODY", body)
 	body.Write(c.ProtocolName)
 	body.WriteByte(c.ProtocolVersion)
 	body.WriteByte(c.ConnectFlags)
 	body.Write(c.KeepAlive)
-	body.Write(encodeClientId(c.ClientIdentifier))
-
-	fmt.Println("BODY", body)
+	body.Write(encodeString(c.ClientIdentifier))
 
 	c.FixedHeader.RemainingLength = body.Len()
-
 	packet := c.FixedHeader.WriteHeader()
 	packet.Write(body.Bytes())
-	fmt.Println("PACKET", packet)
+
+	if v {
+		fmt.Println("BODY", body)
+		fmt.Println("PACKET", packet)
+	}
 	_, err = packet.WriteTo(w)
 
 	return err

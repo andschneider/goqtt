@@ -11,27 +11,30 @@ import (
 )
 
 func main() {
-	conn, err := net.Dial("tcp", "192.168.1.189:1883")
+	// TODO: cli arguments
+	ip := "192.168.1.189"
+	port := "1883"
+	conn, err := net.Dial("tcp", ip+":"+port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-
-	//create connection packet
+	verbose := false // TODO: cli argument
+	// create connection packet
 	buf := new(bytes.Buffer)
-	cpack := createConPacket()
-	cpack.Write(buf)
+	cpack := CreateConnectPacket()
+	cpack.Write(buf, verbose)
 
-	fmt.Println(buf.String())
 	conn.Write(buf.Bytes())
 	fmt.Println("connected")
 	time.Sleep(1 * time.Second)
 
-	//create subscription packet
+	// create subscription packet
+	topic := "test/topic" // TODO: cli argument
 	buf = new(bytes.Buffer)
-	spack := createSubPacket()
-	spack.Write(buf)
-	fmt.Println(buf.String())
+	spack := CreateSubscribePacket(topic)
+	spack.Write(buf, verbose)
+	fmt.Printf("Subscribe response %s\n", buf.String())
 	conn.Write(buf.Bytes())
 	for {
 		mustCopy(os.Stdout, conn)
