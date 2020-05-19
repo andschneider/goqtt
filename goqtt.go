@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"flag"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -44,11 +43,6 @@ func main() {
 	spack.Write(buf, *verbose)
 	sendPacket(conn, buf.Bytes())
 	log.Printf("subscribed to %s\n", *topic)
-	//for {
-	//	mustCopy(os.Stdout, conn)
-	//	time.Sleep(5)
-	//	fmt.Println()
-	//}
 	subscribeLoop(conn)
 }
 
@@ -60,23 +54,15 @@ func sendPacket(c net.Conn, packet []byte) {
 }
 
 func subscribeLoop(conn net.Conn) {
-	//r := bufio.NewReader(conn)
 	for {
-		log.Println("start loop")
-		message := make([]byte, int(26))
-		_, err := io.ReadFull(conn, message)
-		//line, err := r.ReadString('\n')
+		//log.Println("start loop")
+		pp := PublishPacket{}
+		p, err := pp.ReadPublishPacket(conn)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		log.Printf("%s\n", message)
+		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
 	}
 
-}
-
-func mustCopy(dst io.Writer, src io.Reader) {
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Fatal(err)
-	}
 }
