@@ -2,21 +2,28 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"flag"
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 )
 
 func main() {
-	// TODO: cli arguments
-	ip := "192.168.1.189"
-	port := "1883"
-	verbose := false       // TODO: cli argument
-	topic := "hello/world" // TODO: cli argument
+	// CLI arguments
+	ip := flag.String("ip", "", "IP address to connect to.")
+	port := flag.String("port", "", "Port of host.")
+	topic := flag.String("topic", "", "Topic(s) to subscribe to.")
+	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
+	flag.Parse()
 
-	conn, err := net.Dial("tcp", ip+":"+port)
+	if *ip == "" || *port == "" || *topic == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	conn, err := net.Dial("tcp", *ip+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,18 +32,18 @@ func main() {
 	// create connection packet
 	buf := new(bytes.Buffer)
 	cpack := CreateConnectPacket()
-	cpack.Write(buf, verbose)
+	cpack.Write(buf, *verbose)
 
 	sendPacket(conn, buf.Bytes())
-	fmt.Printf("connected to %s:%s\n", ip, port)
+	log.Printf("connected to %s:%s\n", *ip, *port)
 	time.Sleep(1 * time.Second)
 
 	// create subscription packet
 	buf.Reset()
-	spack := CreateSubscribePacket(topic)
-	spack.Write(buf, verbose)
+	spack := CreateSubscribePacket(*topic)
+	spack.Write(buf, *verbose)
 	sendPacket(conn, buf.Bytes())
-	fmt.Printf("subscribed to %s\n", topic)
+	log.Printf("subscribed to %s\n", *topic)
 	//for {
 	//	mustCopy(os.Stdout, conn)
 	//	time.Sleep(5)
@@ -55,7 +62,7 @@ func sendPacket(c net.Conn, packet []byte) {
 func subscribeLoop(conn net.Conn) {
 	//r := bufio.NewReader(conn)
 	for {
-		log.Println("asdf")
+		log.Println("start loop")
 		message := make([]byte, int(26))
 		_, err := io.ReadFull(conn, message)
 		//line, err := r.ReadString('\n')
