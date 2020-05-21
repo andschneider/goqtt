@@ -1,4 +1,4 @@
-package main
+package goqtt
 
 import (
 	"bytes"
@@ -31,23 +31,40 @@ func main() {
 	// create connection packet
 	buf := new(bytes.Buffer)
 	cpack := CreateConnectPacket()
-	cpack.Write(buf, *verbose)
+	err = cpack.Write(buf, *verbose)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	sendPacket(conn, buf.Bytes())
 	log.Printf("connected to %s:%s\n", *ip, *port)
 	time.Sleep(1 * time.Second)
 
+	// create publish packet
+	buf.Reset()
+	ppack := CreatePublishPacket(*topic, "hihihihihihi")
+	err = ppack.Write(buf, *verbose)
+	if err != nil {
+		log.Fatal(err)
+	}
+	sendPacket(conn, buf.Bytes())
+
 	// create subscription packet
 	buf.Reset()
 	spack := CreateSubscribePacket(*topic)
-	spack.Write(buf, *verbose)
+	err = spack.Write(buf, *verbose)
+	if err != nil {
+		log.Fatal(err)
+	}
 	sendPacket(conn, buf.Bytes())
 	log.Printf("subscribed to %s\n", *topic)
+
 	subscribeLoop(conn)
 }
 
 func sendPacket(c net.Conn, packet []byte) {
 	_, err := c.Write(packet)
+	log.Printf("sent packet: %s", string(packet))
 	if err != nil {
 		log.Fatal(err)
 	}
