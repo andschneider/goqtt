@@ -16,6 +16,8 @@ var MessageTypes = map[string]byte{
 	"CONNECT":   16,  // 00010000 in binary
 	"SUBSCRIBE": 130, // 10000010 in binary
 	"PUBLISH":   48,  // 00110000 in binary
+	"PINGREQ":   192, // 11000000 in binary
+	"PINGRESP":  208, // 11010000 in binary
 }
 
 type FixedHeader struct {

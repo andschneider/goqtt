@@ -1,4 +1,4 @@
-package examples
+package main
 
 import (
 	"bytes"
@@ -36,19 +36,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	goqtt.SendPacket(conn, buf.Bytes())
 	log.Printf("connected to %s:%s\n", *ip, *port)
 	time.Sleep(1 * time.Second)
-
-	// create publish packet
-	buf.Reset()
-	ppack := goqtt.CreatePublishPacket(*topic, "hihihihihihi")
-	err = ppack.Write(buf, *verbose)
-	if err != nil {
-		log.Fatal(err)
-	}
-	goqtt.SendPacket(conn, buf.Bytes())
 
 	// create subscription packet
 	buf.Reset()
@@ -60,5 +50,6 @@ func main() {
 	goqtt.SendPacket(conn, buf.Bytes())
 	log.Printf("subscribed to %s\n", *topic)
 
+	// subscribe to topic and read messages
 	goqtt.SubscribeLoop(conn)
 }
