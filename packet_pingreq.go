@@ -10,7 +10,7 @@ type PingReqPacket struct {
 }
 
 func CreatePingReqPacket() (pp PingReqPacket) {
-	pp.FixedHeader = FixedHeader{MessageType: "PINGREQ"}
+	pp.FixedHeader = FixedHeader{MessageType: "PINGREQ", RemainingLength: 0}
 	return
 }
 

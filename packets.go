@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 )
 
 const (
@@ -18,6 +19,17 @@ var MessageTypes = map[string]byte{
 	"PUBLISH":   48,  // 00110000 in binary
 	"PINGREQ":   192, // 11000000 in binary
 	"PINGRESP":  208, // 11010000 in binary
+}
+
+var MessageTypesTemp = map[byte]string{
+	16:  "CONNECT",
+	130: "SUBSCRIBE",
+	48:  "PUBLISH",
+	192: "PINGREQ",
+	208: "PINGRESP",
+}
+
+type Packet struct {
 }
 
 type FixedHeader struct {
@@ -39,6 +51,52 @@ func (fh *FixedHeader) read(r io.Reader) (err error) {
 	fh.MessageType = "PUBLISH" // TODO generalize to different types
 	fh.RemainingLength, err = decodeLength(r)
 	return err
+}
+
+func (fh *FixedHeader) String() string {
+	return fmt.Sprintf("%s remaining length: %d", fh.MessageType, fh.RemainingLength)
+}
+
+func Reader(r io.Reader) (*Packet, error) {
+	var fh FixedHeader
+	b := make([]byte, 1)
+
+	_, err := io.ReadFull(r, b)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Printf("SDFSDF 0 %d\n", b[0])
+	fh.MessageType = MessageTypesTemp[b[0]]
+
+	switch fh.MessageType {
+	case "PINGRESP":
+		fmt.Println("GOT A PING RESPONSE")
+	case "PUBLISH":
+		fmt.Println("GOT A PUBLISH RESPONSE")
+
+		pp := PublishPacket{}
+		p, err := pp.ReadPublishPacket(r)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
+
+	}
+	//fmt.Printf("TYPETYPE %s\n", fh.MessageType)
+	//err = fh.read(r)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//fmt.Printf("FHFHFH %v\n", fh)
+	//fmt.Printf("FHFHFH %s %d\n", fh.MessageType, fh.RemainingLength)
+
+	//packetBytes := make([]byte, fh.RemainingLength)
+	//_, err = io.ReadFull(r, packetBytes)
+	//if err != nil {
+	//	return nil, err
+	//}
+	fmt.Println("done reading...")
+	return nil, err
 }
 
 func encodeLength(length int) []byte {
