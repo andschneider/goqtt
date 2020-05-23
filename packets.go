@@ -23,6 +23,10 @@ type FixedHeader struct {
 	RemainingLength int
 }
 
+func (fh *FixedHeader) String() string {
+	return fmt.Sprintf("%s remaining length: %d", fh.MessageType, fh.RemainingLength)
+}
+
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 	t, ok := MessageTypes[fh.MessageType]
 	if !ok {
@@ -34,7 +38,7 @@ func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 }
 
 func (fh *FixedHeader) read(r io.Reader) (err error) {
-	fh.MessageType = "PUBLISH" // TODO generalize to different types
+	//fh.MessageType = "PUBLISH" // TODO generalize to different types
 	fh.RemainingLength, err = decodeLength(r)
 	return err
 }
@@ -85,6 +89,15 @@ func encodeString(s string) []byte {
 func decodeString(b io.Reader) (string, error) {
 	buf, err := decodeBytes(b)
 	return string(buf), err
+}
+
+func decodeByte(b io.Reader) (byte, error) {
+	num := make([]byte, 1)
+	_, err := b.Read(num)
+	if err != nil {
+		return 0, err
+	}
+	return num[0], nil
 }
 
 func decodeBytes(b io.Reader) ([]byte, error) {

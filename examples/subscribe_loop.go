@@ -1,27 +1,15 @@
-package examples
+package main
 
 import (
 	"bytes"
-	"flag"
 	"github.com/andschneider/goqtt"
 	"log"
 	"net"
-	"os"
 	"time"
 )
 
 func main() {
-	// CLI arguments
-	ip := flag.String("ip", "", "IP address to connect to.")
-	port := flag.String("port", "", "Port of host.")
-	topic := flag.String("topic", "", "Topic(s) to subscribe to.")
-	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
-	flag.Parse()
-
-	if *ip == "" || *port == "" || *topic == "" {
-		flag.Usage()
-		os.Exit(1)
-	}
+	ip, port, topic, verbose := cli()
 
 	conn, err := net.Dial("tcp", *ip+":"+*port)
 	if err != nil {
