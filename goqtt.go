@@ -6,9 +6,11 @@ import (
 	"net"
 )
 
-func SendPacket(c net.Conn, packet []byte) {
+func SendPacket(c net.Conn, packet []byte, verbose bool) {
 	_, err := c.Write(packet)
-	log.Printf("sent packet: %s", string(packet))
+	if verbose {
+		log.Printf("sent packet: %s", string(packet))
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,15 +25,7 @@ func SendConnect(c net.Conn, verbose bool) error {
 		log.Fatal(err)
 		return err
 	}
-
-	_, err = c.Write(buf.Bytes())
-	if verbose {
-		log.Printf("sent packet: %s", string(buf.Bytes()))
-	}
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	SendPacket(c, buf.Bytes(), verbose)
 
 	// response
 	t, err := decodeByte(c)
@@ -56,6 +50,40 @@ func SendConnect(c net.Conn, verbose bool) error {
 	return nil
 }
 
+// TODO figure out how to generalize this to other packet types
+func SendSubscribe(c net.Conn, topic string, verbose bool) error {
+	spack := CreateSubscribePacket(topic)
+	buf := new(bytes.Buffer)
+	err := spack.Write(buf, verbose)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	SendPacket(c, buf.Bytes(), verbose)
+
+	// response
+	t, err := decodeByte(c)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	if t != 144 {
+		log.Printf("response type is not a suback packet. got %d", t)
+	}
+
+	sp := SubackPacket{}
+	err = sp.ReadSubackPacket(c)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	if verbose {
+		log.Printf("suback packet: %v", sp)
+	}
+
+	return nil
+}
+
 func SubscribeLoop(conn net.Conn) {
 	for {
 		//log.Println("start loop")
@@ -67,5 +95,4 @@ func SubscribeLoop(conn net.Conn) {
 		}
 		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
 	}
-
 }
