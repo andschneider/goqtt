@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 )
 
 const (
@@ -16,11 +17,31 @@ var MessageTypes = map[string]byte{
 	"CONNECT":   16,  // 00010000 in binary
 	"SUBSCRIBE": 130, // 10000010 in binary
 	"PUBLISH":   48,  // 00110000 in binary
+	"PINGREQ":   192, // 11000000 in binary
+	"PINGRESP":  208, // 11010000 in binary
+}
+
+var MessageTypesTemp = map[byte]string{
+	16:  "CONNECT",
+	32:  "CONNACK",
+	130: "SUBSCRIBE",
+	144: "SUBACK",
+	48:  "PUBLISH",
+	192: "PINGREQ",
+	208: "PINGRESP",
+}
+
+type Packet struct {
+	PingRespPacket
 }
 
 type FixedHeader struct {
 	MessageType     string
 	RemainingLength int
+}
+
+func (fh *FixedHeader) String() string {
+	return fmt.Sprintf("%s remaining length: %d", fh.MessageType, fh.RemainingLength)
 }
 
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
@@ -34,9 +55,55 @@ func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 }
 
 func (fh *FixedHeader) read(r io.Reader) (err error) {
-	fh.MessageType = "PUBLISH" // TODO generalize to different types
+	//fh.MessageType = "PUBLISH" // TODO generalize to different types
 	fh.RemainingLength, err = decodeLength(r)
 	return err
+}
+
+func Reader(r io.Reader) (*Packet, error) {
+	var fh FixedHeader
+	t, err := decodeByte(r)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	fh.MessageType = MessageTypesTemp[t]
+	switch fh.MessageType {
+	case "PINGRESP":
+		//fmt.Println("GOT A PING RESPONSE")
+		pr := PingRespPacket{}
+		err := pr.ReadPingRespPacket(r)
+		if err != nil {
+			return nil, err
+		}
+	case "PUBLISH":
+		//fmt.Println("GOT A PUBLISH RESPONSE")
+		pp := PublishPacket{}
+		p, err := pp.ReadPublishPacket(r)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
+	case "CONNACK":
+		//fmt.Println("GOT A CONNACK RESPONSE")
+		cp := ConnackPacket{}
+		err = cp.ReadConnackPacket(r)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		//log.Printf("connack packet: %v", cp)
+	case "SUBACK":
+		//fmt.Println("GOT A SUBACK RESPONSE")
+		sp := SubackPacket{}
+		err = sp.ReadSubackPacket(r)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		//log.Printf("suback packet: %v", sp)
+	}
+	return nil, err
 }
 
 func encodeLength(length int) []byte {
@@ -85,6 +152,15 @@ func encodeString(s string) []byte {
 func decodeString(b io.Reader) (string, error) {
 	buf, err := decodeBytes(b)
 	return string(buf), err
+}
+
+func decodeByte(b io.Reader) (byte, error) {
+	num := make([]byte, 1)
+	_, err := b.Read(num)
+	if err != nil {
+		return 0, err
+	}
+	return num[0], nil
 }
 
 func decodeBytes(b io.Reader) ([]byte, error) {

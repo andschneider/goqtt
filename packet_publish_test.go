@@ -15,6 +15,11 @@ func TestPublishPacket_Write(t *testing.T) {
 		t.Errorf("could not write Publish packet %v", err)
 	}
 
+	packetType, err := decodeByte(&buf)
+	if err != nil {
+		t.Errorf("could not decode type from fixed header. got %v", packetType)
+	}
+
 	p, err := pp.ReadPublishPacket(&buf)
 	if err != nil {
 		t.Errorf("could not read Publish packer %v", err)
