@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"net"
+	"time"
 )
 
 func SendPacket(c net.Conn, packet []byte, verbose bool) {
@@ -80,6 +81,23 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 
 // TODO add callback function to process packet from Reader
 func SubscribeLoop(conn net.Conn) {
+	ticker := time.NewTicker(30 * time.Second)
+	// TODO add disconnect functionality
+	disconnect := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-disconnect:
+				return
+			case <-ticker.C:
+				err := SendPing(conn, false)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	}()
+
 	for {
 		//log.Println("start loop")
 		_, err := Reader(conn)
