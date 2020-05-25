@@ -23,13 +23,16 @@ var MessageTypes = map[string]byte{
 
 var MessageTypesTemp = map[byte]string{
 	16:  "CONNECT",
+	32:  "CONNACK",
 	130: "SUBSCRIBE",
+	144: "SUBACK",
 	48:  "PUBLISH",
 	192: "PINGREQ",
 	208: "PINGRESP",
 }
 
 type Packet struct {
+	PingRespPacket
 }
 
 type FixedHeader struct {
@@ -59,43 +62,47 @@ func (fh *FixedHeader) read(r io.Reader) (err error) {
 
 func Reader(r io.Reader) (*Packet, error) {
 	var fh FixedHeader
-	b := make([]byte, 1)
-
-	_, err := io.ReadFull(r, b)
+	t, err := decodeByte(r)
 	if err != nil {
+		log.Fatal(err)
 		return nil, err
 	}
-	//fmt.Printf("SDFSDF 0 %d\n", b[0])
-	fh.MessageType = MessageTypesTemp[b[0]]
-
+	fh.MessageType = MessageTypesTemp[t]
 	switch fh.MessageType {
 	case "PINGRESP":
-		fmt.Println("GOT A PING RESPONSE")
+		//fmt.Println("GOT A PING RESPONSE")
+		pr := PingRespPacket{}
+		err := pr.ReadPingRespPacket(r)
+		if err != nil {
+			return nil, err
+		}
 	case "PUBLISH":
-		fmt.Println("GOT A PUBLISH RESPONSE")
-
+		//fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
 		p, err := pp.ReadPublishPacket(r)
 		if err != nil {
 			return nil, err
 		}
 		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
-
+	case "CONNACK":
+		//fmt.Println("GOT A CONNACK RESPONSE")
+		cp := ConnackPacket{}
+		err = cp.ReadConnackPacket(r)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		//log.Printf("connack packet: %v", cp)
+	case "SUBACK":
+		//fmt.Println("GOT A SUBACK RESPONSE")
+		sp := SubackPacket{}
+		err = sp.ReadSubackPacket(r)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+		//log.Printf("suback packet: %v", sp)
 	}
-	//fmt.Printf("TYPETYPE %s\n", fh.MessageType)
-	//err = fh.read(r)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//fmt.Printf("FHFHFH %v\n", fh)
-	//fmt.Printf("FHFHFH %s %d\n", fh.MessageType, fh.RemainingLength)
-
-	//packetBytes := make([]byte, fh.RemainingLength)
-	//_, err = io.ReadFull(r, packetBytes)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//fmt.Println("done reading...")
 	return nil, err
 }
 

@@ -44,13 +44,6 @@ func (p *PublishPacket) Write(w io.Writer, v bool) error {
 
 func (p *PublishPacket) ReadPublishPacket(r io.Reader) (*PublishPacket, error) {
 	var fh FixedHeader
-	//b := make([]byte, 1)
-	//
-	//_, err := io.ReadFull(r, b)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//fmt.Printf("FUCKER %d", b)
 	err := fh.read(r)
 	if err != nil {
 		return nil, err

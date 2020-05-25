@@ -23,19 +23,14 @@ func (p *PingRespPacket) Write(w io.Writer, v bool) error {
 	return err
 }
 
-func (p *PingRespPacket) ReadPingRespPacket(r io.Reader) (*PingRespPacket, error) {
+func (p *PingRespPacket) ReadPingRespPacket(r io.Reader) error {
 	var fh FixedHeader
-	b := make([]byte, 1)
-
-	_, err := io.ReadFull(r, b)
+	fh.MessageType = "PINGRESP"
+	err := fh.read(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	p.FixedHeader = fh
 
-	err = fh.read(r)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("FH", fh)
-	return p, err
+	return nil
 }
