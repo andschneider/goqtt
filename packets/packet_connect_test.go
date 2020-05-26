@@ -1,4 +1,4 @@
-package goqtt
+package packets
 
 import (
 	"fmt"

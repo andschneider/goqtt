@@ -1,4 +1,4 @@
-package goqtt
+package packets
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestPingReqPacket(t *testing.T) {
-	pr := CreatePingReqPacket()
+func TestPingRespPacket(t *testing.T) {
+	pr := CreatePingRespPacket()
 	err := pr.Write(os.Stdout, true)
 	if err != nil {
 		t.Errorf("could not write PingReq packet %v", err)
