@@ -1,15 +1,38 @@
+/*
+This example subscribes to a MQTT broker will print any incoming messages to the terminal.
+
+to run: go run ./examples/subscribe_loop.go
+
+The default broker is the publicly available server hosted by the Eclipse foundation, but can be changed by specifying a
+different host name or IP address with the -server flag.
+
+The default topic is "hello/world", which may or may not have any messages being published to it (if using the Eclipse
+server). If nothing shows up, try a different topic or publish a message using the publish.go example.
+*/
+
 package main
 
 import (
+	"flag"
 	"github.com/andschneider/goqtt"
 	"log"
 	"net"
+	"os"
 )
 
 func main() {
-	ip, port, topic, verbose := cli()
+	server := flag.String("server", "mqtt.eclipse.org", "Server to connect to.")
+	port := flag.String("port", "1883", "Port of host.")
+	topic := flag.String("topic", "hello/world", "Topic(s) to subscribe to.")
+	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
+	flag.Parse()
 
-	conn, err := net.Dial("tcp", *ip+":"+*port)
+	if *server == "" || *port == "" || *topic == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	conn, err := net.Dial("tcp", *server+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,7 +43,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	log.Printf("connected to %s:%s\n", *ip, *port)
+	log.Printf("connected to %s:%s\n", *server, *port)
 
 	err = goqtt.SendSubscribe(conn, *topic, *verbose)
 	if err != nil {
