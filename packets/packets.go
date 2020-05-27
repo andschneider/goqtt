@@ -60,12 +60,14 @@ func (fh *FixedHeader) read(r io.Reader) (err error) {
 	return err
 }
 
+// TODO implement or remove returning a Packet (which is nothing right now)
+
+// Reader reads in a packet from a TCP connection, determining packet type based on the first byte of the packet.
 func Reader(r io.Reader) (*Packet, error) {
 	var fh FixedHeader
 	t, err := decodeByte(r)
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		return nil, fmt.Errorf("could not decode byte from fixed header while reading packet: %v", err)
 	}
 	fh.MessageType = MessageTypesTemp[t]
 	switch fh.MessageType {
@@ -74,23 +76,23 @@ func Reader(r io.Reader) (*Packet, error) {
 		pr := PingRespPacket{}
 		err := pr.ReadPingRespPacket(r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not read PINGRESP packet: %v", err)
 		}
 	case "PUBLISH":
 		//fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
 		p, err := pp.ReadPublishPacket(r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not read PUBLISH packet: %v", err)
 		}
+		// TODO replace this with a callback function
 		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
 	case "CONNACK":
 		//fmt.Println("GOT A CONNACK RESPONSE")
 		cp := ConnackPacket{}
 		err = cp.ReadConnackPacket(r)
 		if err != nil {
-			log.Fatal(err)
-			return nil, err
+			return nil, fmt.Errorf("could not read CONNACK packet: %v", err)
 		}
 		//log.Printf("connack packet: %v", cp)
 	case "SUBACK":
@@ -98,8 +100,7 @@ func Reader(r io.Reader) (*Packet, error) {
 		sp := SubackPacket{}
 		err = sp.ReadSubackPacket(r)
 		if err != nil {
-			log.Fatal(err)
-			return nil, err
+			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
 		//log.Printf("suback packet: %v", sp)
 	}
@@ -158,7 +159,7 @@ func decodeByte(b io.Reader) (byte, error) {
 	num := make([]byte, 1)
 	_, err := b.Read(num)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("could not read bytes in decodeByte: %v", err)
 	}
 	return num[0], nil
 }

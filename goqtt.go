@@ -9,39 +9,58 @@ import (
 	"time"
 )
 
-func sendPacket(c net.Conn, packet []byte, verbose bool) {
+func sendPacket(c net.Conn, packet []byte, verbose bool) error {
 	_, err := c.Write(packet)
 	if verbose {
 		log.Printf("sent packet: %b", packet)
 	}
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("could not send packet to connection: %v", err)
 	}
+	return nil
 }
 
+// TODO figure out how to generalize the Send<Packet> functions
+
+// SendPublish sends a given message to a given topic in a PUBLISH packet.
 func SendPublish(c net.Conn, topic string, message string, verbose bool) error {
+	// create packet
 	buf := new(bytes.Buffer)
 	ppack := packets.CreatePublishPacket(topic, message)
 	err := ppack.Write(buf, verbose)
 	if err != nil {
-		return fmt.Errorf("could not write the publish packet: %v", err)
+		return fmt.Errorf("could not write PUBLISH packet: %v", err)
 	}
-	sendPacket(c, buf.Bytes(), verbose)
+
+	// send packet
+	err = sendPacket(c, buf.Bytes(), verbose)
+	if err != nil {
+		return fmt.Errorf("could not send PUBLISH packet: %v", err)
+	}
+
+	// has no response with QOS 0
 	return nil
 }
 
-// SendPing is a helper function to create a Ping and send it right away.
+// SendPing is a helper function to create a PINGREQ packet and send it right away.
+// It also reads the PINGRESP packet.
 func SendPing(c net.Conn, verbose bool) error {
+	// create packet
 	buf := new(bytes.Buffer)
 	ping := packets.CreatePingReqPacket()
 	err := ping.Write(buf, verbose)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return fmt.Errorf("could not write PING packet: %v", err)
 	}
-	sendPacket(c, buf.Bytes(), verbose)
+
+	// send packet
+	err = sendPacket(c, buf.Bytes(), verbose)
+	if err != nil {
+		return fmt.Errorf("could not send PING packet: %v", err)
+	}
 
 	// response
+	// why did i make this a goroutine?
 	go func() {
 		_, err = packets.Reader(c)
 		if err != nil {
@@ -52,16 +71,21 @@ func SendPing(c net.Conn, verbose bool) error {
 	return nil
 }
 
-// TODO figure out how to generalize this to other packet types
+// SendConnect sends a CONNECT packet and reads the CONNACK response.
 func SendConnect(c net.Conn, verbose bool) error {
+	// create packet
 	buf := new(bytes.Buffer)
 	cpack := packets.CreateConnectPacket()
 	err := cpack.Write(buf, verbose)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return fmt.Errorf("could not write CONNECT packet: %v", err)
 	}
-	sendPacket(c, buf.Bytes(), verbose)
+
+	// send packet
+	err = sendPacket(c, buf.Bytes(), verbose)
+	if err != nil {
+		return fmt.Errorf("could not send CONNECT packet: %v", err)
+	}
 
 	// response
 	_, err = packets.Reader(c)
@@ -72,17 +96,21 @@ func SendConnect(c net.Conn, verbose bool) error {
 	return nil
 }
 
-// TODO figure out how to generalize this to other packet types
+// SendSubscribe sends a SUBSCRIBE packet to a given topic and reads the SUBACK packet.
 func SendSubscribe(c net.Conn, topic string, verbose bool) error {
+	// create packet
 	buf := new(bytes.Buffer)
 	spack := packets.CreateSubscribePacket(topic)
 	err := spack.Write(buf, verbose)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return fmt.Errorf("could not write SUBSCRIBE packet: %v", err)
 	}
-	sendPacket(c, buf.Bytes(), verbose)
 
+	// send packet
+	err = sendPacket(c, buf.Bytes(), verbose)
+	if err != nil {
+		return fmt.Errorf("could not send SUBSCRIBE packet: %v", err)
+	}
 	// response
 	_, err = packets.Reader(c)
 	if err != nil {
@@ -92,7 +120,8 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	return nil
 }
 
-// TODO add callback function to process packet from Reader
+// SubscribeLoop keeps a connection alive after a successful subscription to a topic and reads any incoming messages.
+// It sends pings every 30 seconds to keep the connection alive.
 func SubscribeLoop(conn net.Conn) {
 	ticker := time.NewTicker(30 * time.Second)
 	// TODO add disconnect functionality
@@ -113,6 +142,7 @@ func SubscribeLoop(conn net.Conn) {
 
 	for {
 		//log.Println("start loop")
+		// TODO add callback function to process packet from Reader
 		_, err := packets.Reader(conn)
 		if err != nil {
 			log.Fatal(err)

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"strconv"
+	"time"
 )
 
 type ConnectPacket struct {
@@ -22,7 +25,8 @@ func CreateConnectPacket() (cp ConnectPacket) {
 	cp.ProtocolVersion = MQTT3
 	cp.ConnectFlags = 2
 	cp.KeepAlive = []byte{0, 60}
-	cp.ClientIdentifier = "andrew"
+	hostname, _ := os.Hostname()
+	cp.ClientIdentifier = hostname + strconv.Itoa(time.Now().Second())
 	return
 }
 
