@@ -17,7 +17,7 @@ func CreatePublishPacket(topic string, message string) (pp PublishPacket) {
 	pp.FixedHeader = FixedHeader{MessageType: "PUBLISH"}
 	pp.Topic = topic
 	pp.MessageId = []byte{0, 1}
-	pp.Message = encodeString(message)
+	pp.Message = []byte(message)
 	return
 }
 
@@ -31,6 +31,7 @@ func (p *PublishPacket) Write(w io.Writer, v bool) error {
 	p.FixedHeader.RemainingLength = body.Len() + len(p.Message)
 	packet := p.FixedHeader.WriteHeader()
 	packet.Write(body.Bytes())
+	//fmt.Printf("%x", p.Message)
 	packet.Write(p.Message)
 
 	if v {

@@ -2,6 +2,7 @@ package goqtt
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/andschneider/goqtt/packets"
 	"log"
 	"net"
@@ -16,6 +17,17 @@ func sendPacket(c net.Conn, packet []byte, verbose bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func SendPublish(c net.Conn, topic string, message string, verbose bool) error {
+	buf := new(bytes.Buffer)
+	ppack := packets.CreatePublishPacket(topic, message)
+	err := ppack.Write(buf, verbose)
+	if err != nil {
+		return fmt.Errorf("could not write the publish packet: %v", err)
+	}
+	sendPacket(c, buf.Bytes(), verbose)
+	return nil
 }
 
 // SendPing is a helper function to create a Ping and send it right away.

@@ -28,7 +28,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	if topic != testTopic {
 		t.Errorf("topics do not match. expected %s, got %s", testTopic, topic)
 	}
-	ms := string(p.Message[2:]) // TODO not sure about the first two characters
+	ms := string(p.Message)
 	if ms != message {
 		t.Errorf("messages do not match. expected %s, got %s", message, ms)
 	}
