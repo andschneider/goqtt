@@ -25,7 +25,7 @@ func CreateSubscribePacket(topic string) (sp SubscribePacket) {
 	return
 }
 
-func (s *SubscribePacket) Write(w io.Writer, v bool) error {
+func (s *SubscribePacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
 
@@ -35,14 +35,9 @@ func (s *SubscribePacket) Write(w io.Writer, v bool) error {
 		body.WriteByte(s.Qos[i])
 	}
 
-	s.FixedHeader.RemainingLength = body.Len()
-	packet := s.FixedHeader.WriteHeader()
+	s.RemainingLength = body.Len()
+	packet := s.WriteHeader()
 	packet.Write(body.Bytes())
-
-	if v {
-		fmt.Println("BODY", body)
-		fmt.Println("PACKET", packet)
-	}
 	_, err = packet.WriteTo(w)
 
 	return err

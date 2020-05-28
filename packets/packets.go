@@ -55,7 +55,6 @@ func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 }
 
 func (fh *FixedHeader) read(r io.Reader) (err error) {
-	//fh.MessageType = "PUBLISH" // TODO generalize to different types
 	fh.RemainingLength, err = decodeLength(r)
 	return err
 }

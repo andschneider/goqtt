@@ -9,7 +9,7 @@ import (
 func TestConnectPacket(t *testing.T) {
 	var buf bytes.Buffer
 	cp := CreateConnectPacket()
-	err := cp.Write(&buf, true)
+	err := cp.Write(&buf)
 	if err != nil {
 		t.Errorf("could not write CONNECT packet: %v", err)
 	}

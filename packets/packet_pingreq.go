@@ -18,11 +18,8 @@ func CreatePingReqPacket() (pp PingReqPacket) {
 	return
 }
 
-func (pp *PingReqPacket) Write(w io.Writer, v bool) error {
-	packet := pp.FixedHeader.WriteHeader()
-	if v {
-		fmt.Println("PACKET", packet)
-	}
+func (pp *PingReqPacket) Write(w io.Writer) error {
+	packet := pp.WriteHeader()
 	_, err := packet.WriteTo(w)
 	return err
 }

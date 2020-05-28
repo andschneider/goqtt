@@ -10,7 +10,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	message := "hello world"
 	pp := CreatePublishPacket(testTopic, message)
 	var buf bytes.Buffer
-	err := pp.Write(&buf, true)
+	err := pp.Write(&buf)
 	if err != nil {
 		t.Errorf("could not write Publish packet %v", err)
 	}

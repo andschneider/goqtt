@@ -34,7 +34,7 @@ func CreateConnectPacket() (cp ConnectPacket) {
 	return
 }
 
-func (c *ConnectPacket) Write(w io.Writer, v bool) error {
+func (c *ConnectPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
 
@@ -47,11 +47,6 @@ func (c *ConnectPacket) Write(w io.Writer, v bool) error {
 	c.RemainingLength = body.Len()
 	packet := c.WriteHeader()
 	packet.Write(body.Bytes())
-
-	if v {
-		fmt.Println("BODY", body)
-		fmt.Println("PACKET", packet)
-	}
 	_, err = packet.WriteTo(w)
 
 	return err

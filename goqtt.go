@@ -3,17 +3,19 @@ package goqtt
 import (
 	"bytes"
 	"fmt"
-	"github.com/andschneider/goqtt/packets"
 	"log"
 	"net"
 	"time"
+
+	"github.com/andschneider/goqtt/packets"
 )
 
-func sendPacket(c net.Conn, packet []byte, verbose bool) error {
+func sendPacket(c net.Conn, packet []byte) error {
 	_, err := c.Write(packet)
-	if verbose {
-		log.Printf("sent packet: %b", packet)
-	}
+	// TODO not sure if I want this yet
+	//if verbose {
+	//	log.Printf("sent packet: %08b", packet)
+	//}
 	if err != nil {
 		return fmt.Errorf("could not send packet to connection: %v", err)
 	}
@@ -27,13 +29,17 @@ func SendPublish(c net.Conn, topic string, message string, verbose bool) error {
 	// create packet
 	buf := new(bytes.Buffer)
 	ppack := packets.CreatePublishPacket(topic, message)
-	err := ppack.Write(buf, verbose)
+	err := ppack.Write(buf)
+	if verbose {
+		fmt.Printf("publish bytes : %v\n", buf.Bytes())
+		fmt.Printf("publish string: %v\n", &ppack)
+	}
 	if err != nil {
 		return fmt.Errorf("could not write PUBLISH packet: %v", err)
 	}
 
 	// send packet
-	err = sendPacket(c, buf.Bytes(), verbose)
+	err = sendPacket(c, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("could not send PUBLISH packet: %v", err)
 	}
@@ -48,13 +54,17 @@ func SendPing(c net.Conn, verbose bool) error {
 	// create packet
 	buf := new(bytes.Buffer)
 	ping := packets.CreatePingReqPacket()
-	err := ping.Write(buf, verbose)
+	err := ping.Write(buf)
+	if verbose {
+		fmt.Printf("ping bytes : %v\n", buf.Bytes())
+		fmt.Printf("ping string: %v\n", &ping)
+	}
 	if err != nil {
 		return fmt.Errorf("could not write PING packet: %v", err)
 	}
 
 	// send packet
-	err = sendPacket(c, buf.Bytes(), verbose)
+	err = sendPacket(c, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("could not send PING packet: %v", err)
 	}
@@ -76,13 +86,17 @@ func SendConnect(c net.Conn, verbose bool) error {
 	// create packet
 	buf := new(bytes.Buffer)
 	cpack := packets.CreateConnectPacket()
-	err := cpack.Write(buf, verbose)
+	err := cpack.Write(buf)
+	if verbose {
+		fmt.Printf("connect bytes : %v\n", buf.Bytes())
+		fmt.Printf("connect string: %v\n", &cpack)
+	}
 	if err != nil {
 		return fmt.Errorf("could not write CONNECT packet: %v", err)
 	}
 
 	// send packet
-	err = sendPacket(c, buf.Bytes(), verbose)
+	err = sendPacket(c, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("could not send CONNECT packet: %v", err)
 	}
@@ -101,13 +115,17 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	// create packet
 	buf := new(bytes.Buffer)
 	spack := packets.CreateSubscribePacket(topic)
-	err := spack.Write(buf, verbose)
+	err := spack.Write(buf)
+	if verbose {
+		fmt.Printf("subscribe bytes : %v\n", buf.Bytes())
+		fmt.Printf("subscribe string: %v\n", &spack)
+	}
 	if err != nil {
 		return fmt.Errorf("could not write SUBSCRIBE packet: %v", err)
 	}
 
 	// send packet
-	err = sendPacket(c, buf.Bytes(), verbose)
+	err = sendPacket(c, buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("could not send SUBSCRIBE packet: %v", err)
 	}
