@@ -75,7 +75,7 @@ func Reader(r io.Reader) error {
 		if err != nil {
 			return fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
-		//log.Printf("suback packet: %v", sp)
+		//log.Printf("suback packet: %v\n", &sp)
 	}
 	return nil
 }
@@ -150,6 +150,16 @@ func decodeBytes(b io.Reader) ([]byte, error) {
 	}
 
 	return field, nil
+}
+
+func decodeMessageId(b io.Reader) ([]byte, error) {
+	var bb []byte
+	num := make([]byte, 2)
+	_, err := b.Read(num)
+	if err != nil {
+		return nil, err
+	}
+	return append(bb, num...), nil
 }
 
 func decodeUint16(b io.Reader) (uint16, error) {
