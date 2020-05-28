@@ -8,48 +8,26 @@ import (
 	"log"
 )
 
-const (
-	MQTT5 = 5 // 0000101 in binary
-	MQTT3 = 4 // 0000100 in binary
-)
+const MQTT3 = 4 // 0000100 in binary
 
-var MessageTypes = map[string]byte{
-	"CONNECT":   16,  // 00010000 in binary
-	"SUBSCRIBE": 130, // 10000010 in binary
-	"PUBLISH":   48,  // 00110000 in binary
-	"PINGREQ":   192, // 11000000 in binary
-	"PINGRESP":  208, // 11010000 in binary
+// PacketType represents the human readable name and the byte representation of the first byte of the packet header
+type PacketType struct {
+	name     string
+	packetId byte
 }
 
-var MessageTypesTemp = map[byte]string{
-	16:  "CONNECT",
-	32:  "CONNACK",
-	130: "SUBSCRIBE",
-	144: "SUBACK",
-	48:  "PUBLISH",
-	192: "PINGREQ",
-	208: "PINGRESP",
-}
-
-type Packet struct {
-	PingRespPacket
-}
-
+// FixedHeader represents the packet type and the length of the remaining payload in the packet
 type FixedHeader struct {
-	MessageType     string
+	PacketType
 	RemainingLength int
 }
 
 func (fh *FixedHeader) String() string {
-	return fmt.Sprintf("%s remaining length: %d", fh.MessageType, fh.RemainingLength)
+	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.name, fh.RemainingLength)
 }
 
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
-	t, ok := MessageTypes[fh.MessageType]
-	if !ok {
-		fmt.Println("wrong message type, must be ...") // TODO: make this better
-	}
-	header.WriteByte(t)
+	header.WriteByte(fh.PacketType.packetId)
 	header.Write(encodeLength(fh.RemainingLength))
 	return
 }
@@ -59,51 +37,47 @@ func (fh *FixedHeader) read(r io.Reader) (err error) {
 	return err
 }
 
-// TODO implement or remove returning a Packet (which is nothing right now)
-
 // Reader reads in a packet from a TCP connection, determining packet type based on the first byte of the packet.
-func Reader(r io.Reader) (*Packet, error) {
-	var fh FixedHeader
-	t, err := decodeByte(r)
+func Reader(r io.Reader) error {
+	pid, err := decodeByte(r)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode byte from fixed header while reading packet: %v", err)
+		return fmt.Errorf("could not decode byte from fixed header while reading packet: %v", err)
 	}
-	fh.MessageType = MessageTypesTemp[t]
-	switch fh.MessageType {
-	case "PINGRESP":
+	switch pid {
+	case pingRespType.packetId:
 		//fmt.Println("GOT A PING RESPONSE")
 		pr := PingRespPacket{}
 		err := pr.ReadPingRespPacket(r)
 		if err != nil {
-			return nil, fmt.Errorf("could not read PINGRESP packet: %v", err)
+			return fmt.Errorf("could not read PINGRESP packet: %v", err)
 		}
-	case "PUBLISH":
+	case publishType.packetId:
 		//fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
 		p, err := pp.ReadPublishPacket(r)
 		if err != nil {
-			return nil, fmt.Errorf("could not read PUBLISH packet: %v", err)
+			return fmt.Errorf("could not read PUBLISH packet: %v", err)
 		}
 		// TODO replace this with a callback function
 		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
-	case "CONNACK":
+	case connackType.packetId:
 		//fmt.Println("GOT A CONNACK RESPONSE")
 		cp := ConnackPacket{}
 		err = cp.ReadConnackPacket(r)
 		if err != nil {
-			return nil, fmt.Errorf("could not read CONNACK packet: %v", err)
+			return fmt.Errorf("could not read CONNACK packet: %v", err)
 		}
 		//log.Printf("connack packet: %v", cp)
-	case "SUBACK":
+	case subackType.packetId:
 		//fmt.Println("GOT A SUBACK RESPONSE")
 		sp := SubackPacket{}
 		err = sp.ReadSubackPacket(r)
 		if err != nil {
-			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
+			return fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
 		//log.Printf("suback packet: %v", sp)
 	}
-	return nil, err
+	return nil
 }
 
 func encodeLength(length int) []byte {

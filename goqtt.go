@@ -72,7 +72,7 @@ func SendPing(c net.Conn, verbose bool) error {
 	// response
 	// why did i make this a goroutine?
 	go func() {
-		_, err = packets.Reader(c)
+		err = packets.Reader(c)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -102,7 +102,7 @@ func SendConnect(c net.Conn, verbose bool) error {
 	}
 
 	// response
-	_, err = packets.Reader(c)
+	err = packets.Reader(c)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -130,7 +130,7 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 		return fmt.Errorf("could not send SUBSCRIBE packet: %v", err)
 	}
 	// response
-	_, err = packets.Reader(c)
+	err = packets.Reader(c)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -161,7 +161,7 @@ func SubscribeLoop(conn net.Conn) {
 	for {
 		//log.Println("start loop")
 		// TODO add callback function to process packet from Reader
-		_, err := packets.Reader(conn)
+		err := packets.Reader(conn)
 		if err != nil {
 			log.Fatal(err)
 			return

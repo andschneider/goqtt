@@ -11,13 +11,18 @@ type ConnackPacket struct {
 	ReturnCode     byte
 }
 
+var connackType = PacketType{
+	name:     "CONNACK",
+	packetId: 32,
+}
+
 func (c *ConnackPacket) String() string {
 	return fmt.Sprintf("%v sessionpresent: %d returncode: %d", c.FixedHeader, c.SessionPresent, c.ReturnCode)
 }
 
 func (c *ConnackPacket) ReadConnackPacket(r io.Reader) error {
 	var fh FixedHeader
-	fh.MessageType = "CONNACK"
+	fh.PacketType = connackType
 	err := fh.read(r)
 	if err != nil {
 		return err

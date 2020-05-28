@@ -9,12 +9,17 @@ type PingReqPacket struct {
 	FixedHeader
 }
 
+var pingReqType = PacketType{
+	name:     "PINGREQ",
+	packetId: 192,
+}
+
 func (pp *PingReqPacket) String() string {
 	return fmt.Sprintf("%v", pp.FixedHeader)
 }
 
 func CreatePingReqPacket() (pp PingReqPacket) {
-	pp.FixedHeader = FixedHeader{MessageType: "PINGREQ", RemainingLength: 0}
+	pp.FixedHeader = FixedHeader{PacketType: pingReqType, RemainingLength: 0}
 	return
 }
 

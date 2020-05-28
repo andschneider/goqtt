@@ -13,12 +13,17 @@ type PublishPacket struct {
 	Message   []byte
 }
 
+var publishType = PacketType{
+	name:     "PUBLISH",
+	packetId: 48,
+}
+
 func (p *PublishPacket) String() string {
 	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
 }
 
 func CreatePublishPacket(topic string, message string) (pp PublishPacket) {
-	pp.FixedHeader = FixedHeader{MessageType: "PUBLISH"}
+	pp.FixedHeader = FixedHeader{PacketType: publishType}
 	pp.Topic = topic
 	pp.MessageId = []byte{0, 1}
 	pp.Message = []byte(message)

@@ -11,13 +11,18 @@ type SubackPacket struct {
 	ReturnCodes []byte
 }
 
+var subackType = PacketType{
+	name:     "SUBACK",
+	packetId: 144,
+}
+
 func (sa *SubackPacket) String() string {
 	return fmt.Sprintf("%v messageid: %d", sa.FixedHeader, sa.MessageId)
 }
 
 func (sa *SubackPacket) ReadSubackPacket(r io.Reader) error {
 	var fh FixedHeader
-	fh.MessageType = "SUBACK"
+	fh.PacketType = subackType
 	err := fh.read(r)
 	if err != nil {
 		return err

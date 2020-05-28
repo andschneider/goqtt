@@ -9,13 +9,18 @@ type PingRespPacket struct {
 	FixedHeader
 }
 
-func CreatePingRespPacket() (pp PingRespPacket) {
-	pp.FixedHeader = FixedHeader{MessageType: "PINGRESP"}
-	return
+var pingRespType = PacketType{
+	name:     "PINGRESP",
+	packetId: 208,
 }
 
 func (p *PingRespPacket) String() string {
 	return fmt.Sprintf("%v", p.FixedHeader)
+}
+
+func CreatePingRespPacket() (pp PingRespPacket) {
+	pp.FixedHeader = FixedHeader{PacketType: pingRespType}
+	return
 }
 
 func (p *PingRespPacket) Write(w io.Writer) error {
@@ -26,7 +31,7 @@ func (p *PingRespPacket) Write(w io.Writer) error {
 
 func (p *PingRespPacket) ReadPingRespPacket(r io.Reader) error {
 	var fh FixedHeader
-	fh.MessageType = "PINGRESP"
+	fh.PacketType = pingRespType
 	err := fh.read(r)
 	if err != nil {
 		return err
