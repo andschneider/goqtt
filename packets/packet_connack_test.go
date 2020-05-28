@@ -17,5 +17,5 @@ func TestConnackPacket(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not read connack packet: %v\n", err)
 	}
-	fmt.Println(ca)
+	fmt.Printf("connack packet: %s\n", &ca)
 }

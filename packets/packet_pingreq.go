@@ -9,13 +9,17 @@ type PingReqPacket struct {
 	FixedHeader
 }
 
+func (pp *PingReqPacket) String() string {
+	return fmt.Sprintf("%v", pp.FixedHeader)
+}
+
 func CreatePingReqPacket() (pp PingReqPacket) {
 	pp.FixedHeader = FixedHeader{MessageType: "PINGREQ", RemainingLength: 0}
 	return
 }
 
-func (p *PingReqPacket) Write(w io.Writer, v bool) error {
-	packet := p.FixedHeader.WriteHeader()
+func (pp *PingReqPacket) Write(w io.Writer, v bool) error {
+	packet := pp.FixedHeader.WriteHeader()
 	if v {
 		fmt.Println("PACKET", packet)
 	}

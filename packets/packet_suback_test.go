@@ -16,5 +16,5 @@ func TestSubackPacket(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not read suback packet: %v\n", err)
 	}
-	fmt.Println(sa)
+	fmt.Printf("subscribe packet: %s\n", &sa)
 }

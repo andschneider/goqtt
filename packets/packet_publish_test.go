@@ -14,6 +14,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not write Publish packet %v", err)
 	}
+	fmt.Printf("publish packet: %s\n", &pp)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {

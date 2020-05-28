@@ -19,6 +19,10 @@ type ConnectPacket struct {
 	ClientIdentifier string
 }
 
+func (c *ConnectPacket) String() string {
+	return fmt.Sprintf("%v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
+}
+
 func CreateConnectPacket() (cp ConnectPacket) {
 	cp.FixedHeader = FixedHeader{MessageType: "CONNECT"}
 	cp.ProtocolName = []byte{0, 4, 77, 81, 84, 84} // "04MQTT"
@@ -40,8 +44,8 @@ func (c *ConnectPacket) Write(w io.Writer, v bool) error {
 	body.Write(c.KeepAlive)
 	body.Write(encodeString(c.ClientIdentifier))
 
-	c.FixedHeader.RemainingLength = body.Len()
-	packet := c.FixedHeader.WriteHeader()
+	c.RemainingLength = body.Len()
+	packet := c.WriteHeader()
 	packet.Write(body.Bytes())
 
 	if v {

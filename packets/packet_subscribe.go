@@ -13,6 +13,10 @@ type SubscribePacket struct {
 	Qos       []byte
 }
 
+func (s *SubscribePacket) String() string {
+	return fmt.Sprintf("%v messageid: %v topics: %s", s.FixedHeader, s.MessageId, s.Topics)
+}
+
 func CreateSubscribePacket(topic string) (sp SubscribePacket) {
 	sp.FixedHeader = FixedHeader{MessageType: "SUBSCRIBE"}
 	sp.MessageId = []byte{0, 1}

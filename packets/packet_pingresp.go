@@ -14,6 +14,10 @@ func CreatePingRespPacket() (pp PingRespPacket) {
 	return
 }
 
+func (p *PingRespPacket) String() string {
+	return fmt.Sprintf("%v", p.FixedHeader)
+}
+
 func (p *PingRespPacket) Write(w io.Writer, v bool) error {
 	packet := p.FixedHeader.WriteHeader()
 	if v {

@@ -1,14 +1,17 @@
 package packets
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 	"testing"
 )
 
 func TestSubscribePacket(t *testing.T) {
+	var buf bytes.Buffer
 	sp := CreateSubscribePacket(testTopic)
-	// fmt.Println(sp)
-	sp.Write(os.Stdout, true)
-	fmt.Println()
+	err := sp.Write(&buf, true)
+	if err != nil {
+		t.Errorf("could not write SUBSCRIBE packet: %v", err)
+	}
+	fmt.Printf("subscribe packet: %s\n", &sp)
 }
