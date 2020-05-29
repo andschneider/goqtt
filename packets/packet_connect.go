@@ -11,7 +11,7 @@ import (
 
 type ConnectPacket struct {
 	FixedHeader
-	ProtocolName    []byte
+	ProtocolName    string //[]byte
 	ProtocolVersion byte
 	ConnectFlags    byte
 	KeepAlive       []byte
@@ -25,12 +25,12 @@ var connectType = PacketType{
 }
 
 func (c *ConnectPacket) String() string {
-	return fmt.Sprintf("%v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
+	return fmt.Sprintf("%v protocolname: %v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolName, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
 }
 
 func CreateConnectPacket() (cp ConnectPacket) {
 	cp.FixedHeader = FixedHeader{PacketType: connectType}
-	cp.ProtocolName = []byte{0, 4, 77, 81, 84, 84} // "04MQTT"
+	cp.ProtocolName = "MQTT"
 	cp.ProtocolVersion = MQTT3
 	cp.ConnectFlags = 2
 	cp.KeepAlive = []byte{0, 60}
@@ -43,7 +43,7 @@ func (c *ConnectPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
 
-	body.Write(c.ProtocolName)
+	body.Write(encodeString(c.ProtocolName))
 	body.WriteByte(c.ProtocolVersion)
 	body.WriteByte(c.ConnectFlags)
 	body.Write(c.KeepAlive)
@@ -55,4 +55,35 @@ func (c *ConnectPacket) Write(w io.Writer) error {
 	_, err = packet.WriteTo(w)
 
 	return err
+}
+
+func (c *ConnectPacket) Read(r io.Reader) error {
+	var fh FixedHeader
+	fh.PacketType = connectType
+	err := fh.read(r)
+	if err != nil {
+		return fmt.Errorf("could not read in header: %v", err)
+	}
+	c.FixedHeader = fh
+	c.ProtocolName, err = decodeString(r)
+	if err != nil {
+		return err
+	}
+	c.ProtocolVersion, err = decodeByte(r)
+	if err != nil {
+		return err
+	}
+	c.ConnectFlags, err = decodeByte(r)
+	if err != nil {
+		return err
+	}
+	c.KeepAlive, err = decodeMessageId(r)
+	if err != nil {
+		return err
+	}
+	c.ClientIdentifier, err = decodeString(r)
+	if err != nil {
+		return err
+	}
+	return nil
 }
