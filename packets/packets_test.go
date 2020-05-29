@@ -13,7 +13,7 @@ func TestFixedHeader(t *testing.T) {
 	var expected bytes.Buffer
 	expected.Write([]byte{16, 0})
 
-	fh := FixedHeader{MessageType: "CONNECT"}
+	fh := FixedHeader{PacketType: connectType}
 	h := fh.WriteHeader()
 	if !bytes.Equal(expected.Bytes(), h.Bytes()) {
 		t.Errorf("Expected %b, got %b\n", expected, h)

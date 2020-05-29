@@ -10,10 +10,11 @@ func TestPublishPacket_Write(t *testing.T) {
 	message := "hello world"
 	pp := CreatePublishPacket(testTopic, message)
 	var buf bytes.Buffer
-	err := pp.Write(&buf, true)
+	err := pp.Write(&buf)
 	if err != nil {
 		t.Errorf("could not write Publish packet %v", err)
 	}
+	fmt.Printf("publish packet: %s\n", &pp)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
@@ -28,7 +29,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	if topic != testTopic {
 		t.Errorf("topics do not match. expected %s, got %s", testTopic, topic)
 	}
-	ms := string(p.Message[2:]) // TODO not sure about the first two characters
+	ms := string(p.Message)
 	if ms != message {
 		t.Errorf("messages do not match. expected %s, got %s", message, ms)
 	}

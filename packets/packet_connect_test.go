@@ -1,13 +1,17 @@
 package packets
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 	"testing"
 )
 
 func TestConnectPacket(t *testing.T) {
+	var buf bytes.Buffer
 	cp := CreateConnectPacket()
-	cp.Write(os.Stdout, true)
-	fmt.Println()
+	err := cp.Write(&buf)
+	if err != nil {
+		t.Errorf("could not write CONNECT packet: %v", err)
+	}
+	fmt.Printf("connect packet: %s\n", &cp)
 }

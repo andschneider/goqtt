@@ -1,16 +1,17 @@
 package packets
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 	"testing"
 )
 
 func TestPingReqPacket(t *testing.T) {
+	var buf bytes.Buffer
 	pr := CreatePingReqPacket()
-	err := pr.Write(os.Stdout, true)
+	err := pr.Write(&buf)
 	if err != nil {
 		t.Errorf("could not write PingReq packet %v", err)
 	}
-	fmt.Println()
+	fmt.Printf("pingreq packet: %s\n", &pr)
 }

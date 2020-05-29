@@ -13,15 +13,24 @@ type SubscribePacket struct {
 	Qos       []byte
 }
 
+var subscribeType = PacketType{
+	name:     "SUBSCRIBE",
+	packetId: 130,
+}
+
+func (s *SubscribePacket) String() string {
+	return fmt.Sprintf("%v messageid: %v topics: %s", s.FixedHeader, s.MessageId, s.Topics)
+}
+
 func CreateSubscribePacket(topic string) (sp SubscribePacket) {
-	sp.FixedHeader = FixedHeader{MessageType: "SUBSCRIBE"}
+	sp.FixedHeader = FixedHeader{PacketType: subscribeType}
 	sp.MessageId = []byte{0, 1}
 	sp.Topics = []string{topic}
 	sp.Qos = []byte{0}
 	return
 }
 
-func (s *SubscribePacket) Write(w io.Writer, v bool) error {
+func (s *SubscribePacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
 
@@ -31,14 +40,9 @@ func (s *SubscribePacket) Write(w io.Writer, v bool) error {
 		body.WriteByte(s.Qos[i])
 	}
 
-	s.FixedHeader.RemainingLength = body.Len()
-	packet := s.FixedHeader.WriteHeader()
+	s.RemainingLength = body.Len()
+	packet := s.WriteHeader()
 	packet.Write(body.Bytes())
-
-	if v {
-		fmt.Println("BODY", body)
-		fmt.Println("PACKET", packet)
-	}
 	_, err = packet.WriteTo(w)
 
 	return err
