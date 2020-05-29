@@ -1,7 +1,7 @@
 /*
 This example publishes a message to a given topic
 
-to run: go run ./examples/publish.go
+to run: go run ./examples/publish/main.go
 
 The default broker is the publicly available server hosted by the Eclipse foundation, but can be changed by specifying a
 different host name or IP address with the -server flag.
@@ -13,9 +13,10 @@ package main
 
 import (
 	"flag"
-	"github.com/andschneider/goqtt"
 	"log"
 	"net"
+
+	"github.com/andschneider/goqtt"
 )
 
 func main() {
