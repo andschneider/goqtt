@@ -1,17 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"log"
+	"math"
 	"net"
+	"time"
 
 	"github.com/andschneider/goqtt/packets"
 )
 
 type client struct {
-	out     chan<- []byte
-	timeout int64
+	out     net.Conn
+	timeout time.Duration
 	//topics   []string // TODO can't use as map key
 	topic    string
 	clientId string
@@ -25,20 +27,18 @@ var (
 )
 
 func broker() {
-	clients := make(map[client]bool)    // all connected clients
-	topics := make(map[string][]client) // TODO is this easier for publishing based on topics?
+	clients := make(map[client]bool) // all connected clients
+	topics := make(map[string]map[client]bool)
 	for {
 		select {
 		case msg := <-messages:
 			// Send messages to every client subscribed to a topic
-			for _, cli := range topics[msg.Topic] {
-				//fmt.Printf("trying to send %s to %s\n", msg.Message, msg.Topic)
-				buf := new(bytes.Buffer)
-				err := msg.Write(buf)
+			for cli := range topics[msg.Topic] {
+				//fmt.Printf("trying to send  %s to %s\n", msg.Message, msg.Topic)
+				err := msg.Write(cli.out)
 				if err != nil {
 					log.Printf("could not write publish packet: %v", err)
 				}
-				cli.out <- buf.Bytes()
 			}
 
 		// register new clients
@@ -47,24 +47,37 @@ func broker() {
 
 		// subscribe clients to a topic
 		case cli := <-subscribe:
-			topics[cli.topic] = append(topics[cli.topic], cli)
+			// create blank client map if not already present
+			if _, ok := topics[cli.topic]; !ok {
+				topics[cli.topic] = make(map[client]bool)
+			}
+			topics[cli.topic][cli] = true
 			//fmt.Println(topics)
 
 		case cli := <-leaving:
 			delete(clients, cli)
-			close(cli.out)
+			for topic := range topics {
+				delete(topics[topic], cli)
+			}
+			// TODO remove empty topic maps
+			fmt.Println(topics)
+			cli.out.Close()
 		}
 	}
 }
 
 func handleConnection(c net.Conn) {
 	var cli client
-	ch := make(chan []byte) // outgoing messages
-	go packetWriter(c, ch)
+	// initialize timer
+	timer := time.NewTimer(math.MaxInt64)
+	timer.Stop()
 
 	for {
 		p, err := packets.Reader(c)
-		if err != nil {
+		if err == io.EOF {
+			// TODO do i care about EOFs?
+			continue
+		} else if err != nil {
 			log.Print(err)
 		}
 		switch t := p.(type) {
@@ -75,11 +88,20 @@ func handleConnection(c net.Conn) {
 			// read in connection information and register new client with broker
 			cp := p.(packets.ConnectPacket)
 			cli = client{
-				out:      ch,
-				timeout:  int64(cp.KeepAlive[1]),
+				out:      c,
+				timeout:  time.Duration(cp.KeepAlive[1]) * time.Second,
 				clientId: cp.ClientIdentifier,
 			}
 			connecting <- cli // register client with broker
+
+			// create timeout functionality
+			//timer.Reset(10 * time.Second)
+			timer.Reset(cli.timeout)
+			go func() {
+				<-timer.C
+				log.Printf("client %s timed out\n", cli.clientId)
+				leaving <- cli
+			}()
 
 			// send a connack
 			ca := packets.CreateConnackPacket()
@@ -87,14 +109,6 @@ func handleConnection(c net.Conn) {
 			if err != nil {
 				log.Printf("could not send CONNACK packet: %v", err)
 			}
-
-			// TODO not sure if want to send it over the channel
-			//buf := new(bytes.Buffer)
-			//err := ca.Write(buf)
-			//if err != nil {
-			//	log.Printf("could not write connack packet: %v", err)
-			//}
-			//ch <- buf.Bytes()
 		case packets.SubscribePacket:
 			log.Printf("subscribe packet recieved %v", p)
 			// read subscribe packet
@@ -112,6 +126,9 @@ func handleConnection(c net.Conn) {
 			}
 		case packets.PingReqPacket:
 			log.Printf("ping request received %v", p)
+			// reset timeout
+			timer.Reset(cli.timeout)
+
 			// send pingresp packet
 			pp := packets.CreatePingRespPacket()
 			err = pp.Write(c)
@@ -126,24 +143,15 @@ func handleConnection(c net.Conn) {
 			// send publish packet to be distributed to clients
 			ppp := packets.CreatePublishPacket(pp.Topic, string(pp.Message))
 			messages <- ppp
+		case packets.DisconnectPacket:
+			//log.Printf("disconnect received %v", p)
+			leaving <- cli
 		default:
+			if t == nil {
+				return
+			}
 			fmt.Printf("unexpected type %t\n", t)
-		}
-		if err != nil {
-			// TODO handle client leaving better
-			log.Println("client left..")
-			//leaving <- cli
-			c.Close()
 			return
-		}
-	}
-}
-
-func packetWriter(conn net.Conn, ch <-chan []byte) {
-	for msg := range ch {
-		_, err := conn.Write(msg)
-		if err != nil {
-			log.Printf("could not send packet: %v", err)
 		}
 	}
 }

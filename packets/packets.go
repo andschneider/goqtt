@@ -46,7 +46,7 @@ func Reader(r io.Reader) (interface{}, error) {
 	}
 	switch pid {
 	case connectType.packetId:
-		//fmt.Println("GOT A CONNECT")
+		fmt.Println("GOT A CONNECT")
 		cp := ConnectPacket{}
 		err = cp.Read(r)
 		if err != nil {
@@ -63,7 +63,7 @@ func Reader(r io.Reader) (interface{}, error) {
 		}
 		//log.Printf("connack packet: %v", cp)
 	case pingReqType.packetId:
-		//fmt.Println("GOT A PING REQUEST")
+		fmt.Println("GOT A PING REQUEST")
 		pr := PingReqPacket{}
 		err := pr.Read(r)
 		if err != nil {
@@ -71,14 +71,14 @@ func Reader(r io.Reader) (interface{}, error) {
 		}
 		return pr, nil
 	case pingRespType.packetId:
-		fmt.Println("GOT A PING RESPONSE")
+		log.Println("GOT A PING RESPONSE")
 		pr := PingRespPacket{}
 		err := pr.ReadPingRespPacket(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read PINGRESP packet: %v", err)
 		}
 	case publishType.packetId:
-		//fmt.Println("GOT A PUBLISH RESPONSE")
+		fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
 		p, err := pp.ReadPublishPacket(r)
 		if err != nil {
@@ -102,6 +102,8 @@ func Reader(r io.Reader) (interface{}, error) {
 			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
 		//log.Printf("suback packet: %v\n", &sp)
+	case 0:
+		return nil, io.EOF
 	default:
 		log.Printf("Type read in was not accounted for: %v\n", pid)
 	}
@@ -160,6 +162,11 @@ func decodeString(b io.Reader) (string, error) {
 func decodeByte(b io.Reader) (byte, error) {
 	num := make([]byte, 1)
 	_, err := b.Read(num)
+	if err == io.EOF {
+		// TODO do i care?
+		//fmt.Println("EOF but i dont care")
+		return 0, nil
+	}
 	if err != nil {
 		return 0, fmt.Errorf("could not read bytes in decodeByte: %v", err)
 	}
