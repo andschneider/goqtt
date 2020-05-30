@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -16,16 +17,11 @@ type client struct {
 	clientId string
 }
 
-type publish struct {
-	message []byte
-	topic   string
-}
-
 var (
 	connecting = make(chan client)
 	leaving    = make(chan client)
-	messages   = make(chan publish)
 	subscribe  = make(chan client)
+	messages   = make(chan packets.PublishPacket)
 )
 
 func broker() {
@@ -35,16 +31,24 @@ func broker() {
 		select {
 		case msg := <-messages:
 			// Send messages to every client subscribed to a topic
-			for _, cli := range topics[msg.topic] {
-				cli.out <- msg.message
+			for _, cli := range topics[msg.Topic] {
+				//fmt.Printf("trying to send %s to %s\n", msg.Message, msg.Topic)
+				buf := new(bytes.Buffer)
+				err := msg.Write(buf)
+				if err != nil {
+					log.Printf("could not write publish packet: %v", err)
+				}
+				cli.out <- buf.Bytes()
 			}
 
+		// register new clients
 		case cli := <-connecting:
 			clients[cli] = true
 
+		// subscribe clients to a topic
 		case cli := <-subscribe:
 			topics[cli.topic] = append(topics[cli.topic], cli)
-			fmt.Println(topics)
+			//fmt.Println(topics)
 
 		case cli := <-leaving:
 			delete(clients, cli)
@@ -108,6 +112,7 @@ func handleConnection(c net.Conn) {
 			}
 		case packets.PingReqPacket:
 			log.Printf("ping request received %v", p)
+			// send pingresp packet
 			pp := packets.CreatePingRespPacket()
 			err = pp.Write(c)
 			if err != nil {
@@ -115,22 +120,20 @@ func handleConnection(c net.Conn) {
 			}
 		case packets.PublishPacket:
 			log.Printf("publish received %v", p)
+			// read publish packet
+			pp := p.(packets.PublishPacket)
 
-			// TODO send publish packet
-			//buf := new(bytes.Buffer)
-			//pp := packets.CreatePublishPacket()
-			//err := pp.Write(buf)
-			//if err != nil {
-			//	log.Printf("could not write connack packet: %v", err)
-			//}
-			//ch <- buf.Bytes()
+			// send publish packet to be distributed to clients
+			ppp := packets.CreatePublishPacket(pp.Topic, string(pp.Message))
+			messages <- ppp
 		default:
 			fmt.Printf("unexpected type %t\n", t)
 		}
 		if err != nil {
+			// TODO handle client leaving better
 			log.Println("client left..")
+			//leaving <- cli
 			c.Close()
-			// escape recursion
 			return
 		}
 	}
@@ -158,7 +161,7 @@ func main() {
 			log.Print(err)
 			continue
 		}
-		fmt.Println("asdf")
+		log.Println("client connecting...")
 		go handleConnection(conn)
 	}
 }
