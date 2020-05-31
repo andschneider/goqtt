@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/andschneider/goqtt/packets"
@@ -14,7 +15,7 @@ import (
 type client struct {
 	out     net.Conn
 	timeout time.Duration
-	//topics   []string // TODO can't use as map key
+	//topics   *[]string
 	topic    string
 	clientId string
 }
@@ -55,14 +56,28 @@ func broker() {
 			//fmt.Println(topics)
 
 		case cli := <-leaving:
+			log.Printf("got a request for a disconnect: %s\n", cli.clientId)
 			delete(clients, cli)
 			for topic := range topics {
 				delete(topics[topic], cli)
 			}
 			// TODO remove empty topic maps
 			fmt.Println(topics)
-			cli.out.Close()
+			err := cli.out.Close()
+			if err != nil {
+				log.Printf("error closing network connection for %v: %v\n", cli, err)
+			}
 		}
+	}
+}
+
+// disconnected checks whether the channel has been closed
+func disconnected(ch <-chan bool) bool {
+	select {
+	case <-ch:
+		return true
+	default:
+		return false
 	}
 }
 
@@ -71,15 +86,28 @@ func handleConnection(c net.Conn) {
 	// initialize timer
 	timer := time.NewTimer(math.MaxInt64)
 	timer.Stop()
+	// disconnect channel
+	done := make(chan bool)
 
 	for {
+		if disconnected(done) {
+			// stop timeout to prevent another disconnect request and break out of loop
+			//log.Println("Client disconnect channel is closed!")
+			timer.Stop()
+			break
+		}
 		p, err := packets.Reader(c)
-		if err == io.EOF {
-			// TODO do i care about EOFs?
-			continue
-		} else if err != nil {
+		if err != nil {
+			if err == io.EOF {
+				// TODO do i care about EOFs?
+				break
+			}
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				break
+			}
 			log.Print(err)
 		}
+
 		switch t := p.(type) {
 		// try to read connection packet first
 		// what if it's not a connection packet for a new client?
@@ -94,7 +122,7 @@ func handleConnection(c net.Conn) {
 			}
 			connecting <- cli // register client with broker
 
-			// create timeout functionality
+			// timeout
 			//timer.Reset(10 * time.Second)
 			timer.Reset(cli.timeout)
 			go func() {
@@ -144,7 +172,8 @@ func handleConnection(c net.Conn) {
 			ppp := packets.CreatePublishPacket(pp.Topic, string(pp.Message))
 			messages <- ppp
 		case packets.DisconnectPacket:
-			//log.Printf("disconnect received %v", p)
+			log.Printf("disconnect received %v", p)
+			close(done) // close done channel to alert disconnect function
 			leaving <- cli
 		default:
 			if t == nil {

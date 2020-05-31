@@ -96,8 +96,8 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 
 // SubscribeLoop keeps a connection alive after a successful subscription to a topic and reads any incoming messages.
 // It sends pings every 30 seconds to keep the connection alive.
-func SubscribeLoop(conn net.Conn) {
-	ticker := time.NewTicker(30 * time.Second)
+func SubscribeLoop(conn net.Conn, verbose bool) {
+	ticker := time.NewTicker(27 * time.Second)
 	// TODO add disconnect functionality
 	disconnect := make(chan bool)
 	go func() {
@@ -106,10 +106,11 @@ func SubscribeLoop(conn net.Conn) {
 			case <-disconnect:
 				return
 			case <-ticker.C:
-				err := SendPing(conn, false)
+				err := SendPing(conn, verbose)
 				if err != nil {
 					log.Fatal(err)
 				}
+				//fmt.Println("would send a ping")
 			}
 		}
 	}()
@@ -119,7 +120,7 @@ func SubscribeLoop(conn net.Conn) {
 		// TODO add callback function to process packet from Reader
 		_, err := packets.Reader(conn)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("subscribe loop error\n", err)
 			return
 		}
 	}

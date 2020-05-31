@@ -13,8 +13,10 @@ import (
 	"flag"
 	"log"
 	"net"
+	"time"
 
 	"github.com/andschneider/goqtt"
+	"github.com/andschneider/goqtt/packets"
 )
 
 func main() {
@@ -36,4 +38,16 @@ func main() {
 	}
 
 	log.Printf("connected to %s:%s\n", *server, *port)
+
+	sleep := 3 * time.Second
+	log.Printf("sleeping for %s\n", sleep)
+	time.Sleep(sleep)
+
+	log.Println("sending a disconnect request")
+	dp := packets.CreateDisconnectPacket()
+	err = dp.Write(conn)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }

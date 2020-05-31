@@ -54,5 +54,5 @@ func main() {
 	log.Printf("subscribed to %s\n", *topic)
 
 	// subscribe to topic and read messages
-	goqtt.SubscribeLoop(conn)
+	goqtt.SubscribeLoop(conn, *verbose)
 }
