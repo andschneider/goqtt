@@ -1,11 +1,23 @@
+/*
+This is an example broker which allows clients to connect and publish messages. The broker keeps track of the clients
+that are connected and which topics they are subscribed to. When a publish comes in from a client, the broker will send
+along the message to each client subscribed to a topic.
+
+to run: go run ./examples/broker/main.go
+
+The broker listens on localhost and port 1884 by default. You can change the port with the -port flag.
+*/
+
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"math"
 	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -45,6 +57,7 @@ func broker() {
 		// register new clients
 		case cli := <-connecting:
 			clients[cli] = true
+			log.Printf("client %q has connected.\n", cli.clientId)
 
 		// subscribe clients to a topic
 		case cli := <-subscribe:
@@ -63,6 +76,7 @@ func broker() {
 			}
 			// TODO remove empty topic maps
 			fmt.Println(topics)
+			// close client connection
 			err := cli.out.Close()
 			if err != nil {
 				log.Printf("error closing network connection for %v: %v\n", cli, err)
@@ -91,9 +105,9 @@ func handleConnection(c net.Conn) {
 
 	for {
 		if disconnected(done) {
-			// stop timeout to prevent another disconnect request and break out of loop
-			//log.Println("Client disconnect channel is closed!")
+			// stop timeout to prevent another disconnect request
 			timer.Stop()
+			//log.Println("Client disconnect channel is closed!")
 			break
 		}
 		p, err := packets.Reader(c)
@@ -171,6 +185,10 @@ func handleConnection(c net.Conn) {
 			// send publish packet to be distributed to clients
 			ppp := packets.CreatePublishPacket(pp.Topic, string(pp.Message))
 			messages <- ppp
+
+			// disconnect client after sending a message
+			close(done) // close done channel to alert disconnect function
+			leaving <- cli
 		case packets.DisconnectPacket:
 			log.Printf("disconnect received %v", p)
 			close(done) // close done channel to alert disconnect function
@@ -186,10 +204,20 @@ func handleConnection(c net.Conn) {
 }
 
 func main() {
-	ln, err := net.Listen("tcp", "127.0.0.1:1884")
+	port := flag.String("port", "1884", "Port to allow connections on.")
+	flag.Parse()
+
+	if *port == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	local := "127.0.0.1"
+	ln, err := net.Listen("tcp", local+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Listening for clients on %s:%s", local, *port)
 
 	go broker()
 	for {

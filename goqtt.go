@@ -2,6 +2,7 @@ package goqtt
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"time"
@@ -120,6 +121,10 @@ func SubscribeLoop(conn net.Conn, verbose bool) {
 		// TODO add callback function to process packet from Reader
 		_, err := packets.Reader(conn)
 		if err != nil {
+			if err == io.EOF {
+				log.Println("Looks like the server closed the connection...")
+				break
+			}
 			log.Fatal("subscribe loop error\n", err)
 			return
 		}
