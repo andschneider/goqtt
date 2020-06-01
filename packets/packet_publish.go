@@ -48,6 +48,7 @@ func (p *PublishPacket) Write(w io.Writer) error {
 
 func (p *PublishPacket) ReadPublishPacket(r io.Reader) (*PublishPacket, error) {
 	var fh FixedHeader
+	fh.PacketType = publishType
 	err := fh.read(r)
 	if err != nil {
 		return nil, err

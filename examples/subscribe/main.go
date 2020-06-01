@@ -1,7 +1,7 @@
 /*
 This example subscribes to a MQTT broker will print any incoming messages to the terminal.
 
-to run: go run ./examples/subscribe_loop.go
+to run: go run ./examples/subscribe/main.go
 
 The default broker is the publicly available server hosted by the Eclipse foundation, but can be changed by specifying a
 different host name or IP address with the -server flag.
@@ -14,10 +14,11 @@ package main
 
 import (
 	"flag"
-	"github.com/andschneider/goqtt"
 	"log"
 	"net"
 	"os"
+
+	"github.com/andschneider/goqtt"
 )
 
 func main() {
@@ -53,5 +54,5 @@ func main() {
 	log.Printf("subscribed to %s\n", *topic)
 
 	// subscribe to topic and read messages
-	goqtt.SubscribeLoop(conn)
+	goqtt.SubscribeLoop(conn, *verbose)
 }

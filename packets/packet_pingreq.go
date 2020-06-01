@@ -28,3 +28,15 @@ func (pp *PingReqPacket) Write(w io.Writer) error {
 	_, err := packet.WriteTo(w)
 	return err
 }
+
+func (pp *PingReqPacket) Read(r io.Reader) error {
+	var fh FixedHeader
+	fh.PacketType = pingReqType
+	err := fh.read(r)
+	if err != nil {
+		return err
+	}
+	pp.FixedHeader = fh
+
+	return nil
+}
