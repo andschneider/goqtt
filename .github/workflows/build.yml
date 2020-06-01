@@ -27,7 +27,3 @@ jobs:
 
     - name: Test
       run: go test -v ./packets .
-
-    - name: Examples
-      run: |
-        go run ./examples/connect.go
