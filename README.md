@@ -6,8 +6,6 @@
 
 ---
 
-simple MQTT client written in Go
-
 ## Install
 
 First, install [Go](https://golang.org/doc/install).
@@ -18,6 +16,9 @@ Next use go modules to download this package:
 
 ## Usage
 
-*WIP*
+See the `examples` folder. There are examples for:
 
-See the `examples` folder.
+- simple connect and disconnect to a broker
+- publishing a message a topic
+- subscribing to a topic
+- a minimal broker

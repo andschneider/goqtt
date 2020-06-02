@@ -22,6 +22,7 @@ import (
 func main() {
 	server := flag.String("server", "mqtt.eclipse.org", "Server to connect to.")
 	port := flag.String("port", "1883", "Port of host.")
+	topic := flag.String("topic", "hello/world", "Topic to subscribe/unsubscribe to.")
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
@@ -39,7 +40,25 @@ func main() {
 
 	log.Printf("connected to %s:%s\n", *server, *port)
 
+	err = goqtt.SendSubscribe(conn, *topic, *verbose)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Printf("subscribed to %s\n", *topic)
+
 	sleep := 3 * time.Second
+	log.Printf("sleeping for %s\n", sleep)
+	time.Sleep(sleep)
+
+	err = goqtt.SendUnsubscribe(conn, *topic, *verbose)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Printf("unsubscribed from %s\n", *topic)
+
+	sleep = 3 * time.Second
 	log.Printf("sleeping for %s\n", sleep)
 	time.Sleep(sleep)
 

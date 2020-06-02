@@ -33,10 +33,11 @@ type client struct {
 }
 
 var (
-	connecting = make(chan client)
-	leaving    = make(chan client)
-	subscribe  = make(chan client)
-	messages   = make(chan packets.PublishPacket)
+	connecting  = make(chan client)
+	leaving     = make(chan client)
+	subscribe   = make(chan client)
+	unsubscribe = make(chan client)
+	messages    = make(chan packets.PublishPacket)
 )
 
 func broker() {
@@ -66,6 +67,13 @@ func broker() {
 				topics[cli.topic] = make(map[client]bool)
 			}
 			topics[cli.topic][cli] = true
+			//fmt.Println(topics)
+
+		// unsubscribe clients from a topic
+		case cli := <-unsubscribe:
+			for topic := range topics {
+				delete(topics[topic], cli)
+			}
 			//fmt.Println(topics)
 
 		case cli := <-leaving:
@@ -129,9 +137,10 @@ func handleConnection(c net.Conn) {
 			log.Printf("connect packet recieved %v", p)
 			// read in connection information and register new client with broker
 			cp := p.(packets.ConnectPacket)
+			to := float64(cp.KeepAlive[1]) * 1.5 // timeout is 1.5 times the keep alive time
 			cli = client{
 				out:      c,
-				timeout:  time.Duration(cp.KeepAlive[1]) * time.Second,
+				timeout:  time.Duration(to) * time.Second,
 				clientId: cp.ClientIdentifier,
 			}
 			connecting <- cli // register client with broker
@@ -179,6 +188,9 @@ func handleConnection(c net.Conn) {
 			}
 		case packets.PublishPacket:
 			log.Printf("publish received %v", p)
+			// reset timeout
+			timer.Reset(cli.timeout)
+
 			// read publish packet
 			pp := p.(packets.PublishPacket)
 
@@ -189,6 +201,20 @@ func handleConnection(c net.Conn) {
 			// disconnect client after sending a message
 			close(done) // close done channel to alert disconnect function
 			leaving <- cli
+		case packets.UnsubscribePacket:
+			log.Printf("unsubscribe request received %v", p)
+			// reset timeout
+			timer.Reset(cli.timeout)
+
+			// send unsuback packet
+			ua := packets.CreateUnsubackPacket()
+			err = ua.Write(c)
+			if err != nil {
+				log.Printf("could not send UNSUBACK packet: %v", err)
+			}
+
+			// tell broker to remove client from subscription map
+			unsubscribe <- cli
 		case packets.DisconnectPacket:
 			log.Printf("disconnect received %v", p)
 			close(done) // close done channel to alert disconnect function

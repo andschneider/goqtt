@@ -102,6 +102,24 @@ func Reader(r io.Reader) (interface{}, error) {
 			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
 		//log.Printf("suback packet: %v\n", &sp)
+	case unsubscribeType.packetId:
+		//fmt.Println("GOT AN UNSUBSCRIBE REQUEST")
+		up := UnsubscribePacket{}
+		err = up.Read(r)
+		if err != nil {
+			return nil, fmt.Errorf("could not read UNSUBSCRIBE packet: %v", err)
+		}
+		//log.Printf("unsubscribe packet: %s\n", up.String())
+		return up, nil
+	case unsubackType.packetId:
+		//fmt.Println("GOT AN UNSUBACK RESPONSE")
+		up := UnsubackPacket{}
+		err = up.Read(r)
+		if err != nil {
+			return nil, fmt.Errorf("could not read UNSUBACK packet: %v", err)
+		}
+		//log.Printf("unsuback packet: %s\n", up.String())
+		//return up, nil
 	case disconnectType.packetId:
 		//fmt.Println("got a disconnect")
 		return DisconnectPacket{}, nil

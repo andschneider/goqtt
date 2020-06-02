@@ -74,7 +74,7 @@ func SendConnect(c net.Conn, verbose bool) error {
 	return nil
 }
 
-// SendSubscribe sends a SUBSCRIBE packet to a given topic and reads the SUBACK packet.
+// SendSubscribe sends a SUBSCRIBE packet for a given topic and reads the SUBACK packet.
 func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	// create packet
 	spack := packets.CreateSubscribePacket(topic)
@@ -84,6 +84,27 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	}
 	if err != nil {
 		return fmt.Errorf("could not write SUBSCRIBE packet: %v", err)
+	}
+
+	// response
+	_, err = packets.Reader(c)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+// SendUnsubscribe sends an UNSUBSCRIBE packet for a given topic and reads the UNSUBACK packet.
+func SendUnsubscribe(c net.Conn, topic string, verbose bool) error {
+	// create packet
+	upack := packets.CreateUnsubscribePacket(topic)
+	err := upack.Write(c)
+	if verbose {
+		fmt.Printf("subscribe string: %v\n", upack.String())
+	}
+	if err != nil {
+		return fmt.Errorf("could not write UNSUBSCRIBE packet: %v", err)
 	}
 
 	// response
