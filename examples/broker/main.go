@@ -230,6 +230,7 @@ func handleConnection(c net.Conn) {
 }
 
 func main() {
+	server := flag.String("server", "127.0.0.1", "IP address to listen on. Default is localhost. Use 0.0.0.0 if running in Docker.")
 	port := flag.String("port", "1884", "Port to allow connections on.")
 	flag.Parse()
 
@@ -238,12 +239,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	local := "127.0.0.1"
-	ln, err := net.Listen("tcp", local+":"+*port)
+	ln, err := net.Listen("tcp", *server+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Listening for clients on %s:%s", local, *port)
+	log.Printf("Listening for clients on %s:%s", *server, *port)
 
 	go broker()
 	for {
