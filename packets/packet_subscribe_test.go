@@ -8,22 +8,23 @@ import (
 
 func TestSubscribePacket(t *testing.T) {
 	var buf bytes.Buffer
-	sp := CreateSubscribePacket(testTopic)
-	err := sp.Write(&buf)
+	var spWrite, spRead SubscribePacket
+
+	spWrite.CreatePacket(testTopic)
+	err := spWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write SUBSCRIBE packet: %v", err)
+		t.Errorf("could not write %s packet: %v", spWrite.name, err)
 	}
-	fmt.Printf("subscribe packet: %s\n", &sp)
+	fmt.Printf("write %s packet: %+v\n", spWrite.name, spWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p := SubscribePacket{}
-	err = p.Read(&buf)
+	err = spRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", subscribeType.name, err)
+		t.Errorf("could not read %s packet: %v", spRead.name, err)
 	}
-	fmt.Println("read that packet!", p)
+	fmt.Printf("read %s packet: %+v\n", spRead.name, spRead)
 }

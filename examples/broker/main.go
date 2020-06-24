@@ -155,7 +155,8 @@ func handleConnection(c net.Conn) {
 			}()
 
 			// send a connack
-			ca := packets.CreateConnackPacket()
+			var ca packets.ConnackPacket
+			ca.CreatePacket()
 			err = ca.Write(c)
 			if err != nil {
 				log.Printf("could not send CONNACK packet: %v", err)
@@ -170,8 +171,9 @@ func handleConnection(c net.Conn) {
 			}
 
 			// send suback packet
-			sap := packets.CreateSubackPacket()
-			err = sap.Write(c)
+			var sa packets.SubackPacket
+			sa.CreatePacket()
+			err = sa.Write(c)
 			if err != nil {
 				log.Printf("could not send SUBACK packet: %v", err)
 			}
@@ -181,34 +183,37 @@ func handleConnection(c net.Conn) {
 			timer.Reset(cli.timeout)
 
 			// send pingresp packet
-			pp := packets.CreatePingRespPacket()
+			var pp packets.PingRespPacket
+			pp.CreatePacket()
 			err = pp.Write(c)
 			if err != nil {
 				log.Printf("could not send PINGRESP packet: %v", err)
 			}
 		case packets.PublishPacket:
+			var pRead, pWrite packets.PublishPacket
 			log.Printf("publish received %v", p)
 			// reset timeout
 			timer.Reset(cli.timeout)
 
 			// read publish packet
-			pp := p.(packets.PublishPacket)
+			pRead = p.(packets.PublishPacket)
 
 			// send publish packet to be distributed to clients
-			ppp := packets.CreatePublishPacket(pp.Topic, string(pp.Message))
-			messages <- ppp
+			pWrite.CreatePacket(pRead.Topic, string(pRead.Message))
+			messages <- pWrite
 
 			// disconnect client after sending a message
 			close(done) // close done channel to alert disconnect function
 			leaving <- cli
 		case packets.UnsubscribePacket:
+			var u packets.UnsubackPacket
 			log.Printf("unsubscribe request received %v", p)
 			// reset timeout
 			timer.Reset(cli.timeout)
 
 			// send unsuback packet
-			ua := packets.CreateUnsubackPacket()
-			err = ua.Write(c)
+			u.CreatePacket()
+			err = u.Write(c)
 			if err != nil {
 				log.Printf("could not send UNSUBACK packet: %v", err)
 			}

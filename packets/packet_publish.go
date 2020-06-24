@@ -18,12 +18,11 @@ var publishType = PacketType{
 	packetId: 48,
 }
 
-func CreatePublishPacket(topic string, message string) (pp PublishPacket) {
-	pp.FixedHeader = FixedHeader{PacketType: publishType}
-	pp.Topic = topic
-	pp.MessageId = []byte{0, 1}
-	pp.Message = []byte(message)
-	return
+func (p *PublishPacket) CreatePacket(topic string, message string) {
+	p.FixedHeader = FixedHeader{PacketType: publishType}
+	p.Topic = topic
+	p.MessageId = []byte{0, 1}
+	p.Message = []byte(message)
 }
 
 func (p *PublishPacket) String() string {

@@ -14,9 +14,8 @@ var pingRespType = PacketType{
 	packetId: 208,
 }
 
-func CreatePingRespPacket() (pp PingRespPacket) {
-	pp.FixedHeader = FixedHeader{PacketType: pingRespType}
-	return
+func (p *PingRespPacket) CreatePacket() {
+	p.FixedHeader = FixedHeader{PacketType: pingRespType}
 }
 
 func (p *PingRespPacket) String() string {

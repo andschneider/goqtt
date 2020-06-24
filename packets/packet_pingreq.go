@@ -14,9 +14,8 @@ var pingReqType = PacketType{
 	packetId: 192,
 }
 
-func CreatePingReqPacket() (pp PingReqPacket) {
+func (pp *PingReqPacket) CreatePacket() {
 	pp.FixedHeader = FixedHeader{PacketType: pingReqType, RemainingLength: 0}
-	return
 }
 
 func (pp *PingReqPacket) String() string {

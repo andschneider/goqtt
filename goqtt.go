@@ -15,10 +15,11 @@ import (
 // SendPublish sends a given message to a given topic in a PUBLISH packet.
 func SendPublish(c net.Conn, topic string, message string, verbose bool) error {
 	// create packet
-	ppack := packets.CreatePublishPacket(topic, message)
-	err := ppack.Write(c)
+	var pp packets.PublishPacket
+	pp.CreatePacket(topic, message)
+	err := pp.Write(c)
 	if verbose {
-		fmt.Printf("publish string: %v\n", &ppack)
+		fmt.Printf("publish string: %v\n", pp.String())
 	}
 	if err != nil {
 		return fmt.Errorf("could not write PUBLISH packet: %v", err)
@@ -32,10 +33,11 @@ func SendPublish(c net.Conn, topic string, message string, verbose bool) error {
 // It also reads the PINGRESP packet.
 func SendPing(c net.Conn, verbose bool) error {
 	// create packet
-	ping := packets.CreatePingReqPacket()
-	err := ping.Write(c)
+	var p packets.PingReqPacket
+	p.CreatePacket()
+	err := p.Write(c)
 	if verbose {
-		fmt.Printf("ping string: %v\n", &ping)
+		fmt.Printf("ping string: %v\n", p.String())
 	}
 	if err != nil {
 		return fmt.Errorf("could not write PING packet: %v", err)
@@ -56,10 +58,11 @@ func SendPing(c net.Conn, verbose bool) error {
 // SendConnect sends a CONNECT packet and reads the CONNACK response.
 func SendConnect(c net.Conn, verbose bool) error {
 	// create packet
-	cpack := packets.CreateConnectPacket()
-	err := cpack.Write(c)
+	var cp packets.ConnectPacket
+	cp.CreatePacket()
+	err := cp.Write(c)
 	if verbose {
-		fmt.Printf("connect string: %v\n", &cpack)
+		fmt.Printf("connect string: %v\n", cp.String())
 	}
 	if err != nil {
 		return fmt.Errorf("could not write CONNECT packet: %v", err)
@@ -77,10 +80,11 @@ func SendConnect(c net.Conn, verbose bool) error {
 // SendSubscribe sends a SUBSCRIBE packet for a given topic and reads the SUBACK packet.
 func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	// create packet
-	spack := packets.CreateSubscribePacket(topic)
-	err := spack.Write(c)
+	var sp packets.SubscribePacket
+	sp.CreatePacket(topic)
+	err := sp.Write(c)
 	if verbose {
-		fmt.Printf("subscribe string: %v\n", &spack)
+		fmt.Printf("subscribe string: %v\n", sp.String())
 	}
 	if err != nil {
 		return fmt.Errorf("could not write SUBSCRIBE packet: %v", err)
@@ -98,10 +102,11 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 // SendUnsubscribe sends an UNSUBSCRIBE packet for a given topic and reads the UNSUBACK packet.
 func SendUnsubscribe(c net.Conn, topic string, verbose bool) error {
 	// create packet
-	upack := packets.CreateUnsubscribePacket(topic)
-	err := upack.Write(c)
+	var up packets.UnsubscribePacket
+	up.CreatePacket(topic)
+	err := up.Write(c)
 	if verbose {
-		fmt.Printf("subscribe string: %v\n", upack.String())
+		fmt.Printf("unsubscribe string: %v\n", up.String())
 	}
 	if err != nil {
 		return fmt.Errorf("could not write UNSUBSCRIBE packet: %v", err)
@@ -113,6 +118,22 @@ func SendUnsubscribe(c net.Conn, topic string, verbose bool) error {
 		log.Fatal(err)
 		return err
 	}
+	return nil
+}
+
+// SendDisconnect sends a DISCONNECT packet.
+func SendDisconnect(c net.Conn, verbose bool) error {
+	// create packet
+	var dp packets.DisconnectPacket
+	dp.CreatePacket()
+	err := dp.Write(c)
+	if verbose {
+		fmt.Printf("disconnect string: %v\n", dp.String())
+	}
+	if err != nil {
+		return fmt.Errorf("could not write DISCONNECT packet: %v", err)
+	}
+
 	return nil
 }
 

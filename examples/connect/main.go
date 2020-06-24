@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/andschneider/goqtt"
-	"github.com/andschneider/goqtt/packets"
 )
 
 func main() {
@@ -63,8 +62,7 @@ func main() {
 	time.Sleep(sleep)
 
 	log.Println("sending a disconnect request")
-	dp := packets.CreateDisconnectPacket()
-	err = dp.Write(conn)
+	err = goqtt.SendDisconnect(conn, *verbose)
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -17,11 +17,10 @@ var unsubscribeType = PacketType{
 	packetId: 162,
 }
 
-func CreateUnsubscribePacket(topic string) (up UnsubscribePacket) {
+func (up *UnsubscribePacket) CreatePacket(topic string) {
 	up.FixedHeader = FixedHeader{PacketType: unsubscribeType}
 	up.MessageId = []byte{0, 1}
 	up.Topics = []string{topic}
-	return
 }
 
 func (up *UnsubscribePacket) String() string {

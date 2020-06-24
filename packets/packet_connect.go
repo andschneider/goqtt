@@ -24,15 +24,14 @@ var connectType = PacketType{
 	packetId: 16,
 }
 
-func CreateConnectPacket() (cp ConnectPacket) {
-	cp.FixedHeader = FixedHeader{PacketType: connectType}
-	cp.ProtocolName = "MQTT"
-	cp.ProtocolVersion = MQTT3
-	cp.ConnectFlags = 2
-	cp.KeepAlive = []byte{0, 60}
+func (c *ConnectPacket) CreatePacket() {
+	c.FixedHeader = FixedHeader{PacketType: connectType}
+	c.ProtocolName = "MQTT"
+	c.ProtocolVersion = MQTT3
+	c.ConnectFlags = 2
+	c.KeepAlive = []byte{0, 60}
 	hostname, _ := os.Hostname()
-	cp.ClientIdentifier = hostname + strconv.Itoa(time.Now().Second())
-	return
+	c.ClientIdentifier = hostname + strconv.Itoa(time.Now().Second())
 }
 
 func (c *ConnectPacket) String() string {

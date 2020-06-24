@@ -8,22 +8,23 @@ import (
 
 func TestUnsubscribePacket(t *testing.T) {
 	var buf bytes.Buffer
-	up := CreateUnsubscribePacket(testTopic)
-	err := up.Write(&buf)
+	var upRead, upWrite UnsubscribePacket
+
+	upWrite.CreatePacket(testTopic)
+	err := upWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet: %v", unsubscribeType.name, err)
+		t.Errorf("could not write %s packet %v", upWrite.name, err)
 	}
-	fmt.Printf("unsubscribe packet: %s\n", up.String())
+	fmt.Printf("write %s packet: %+v\n", upWrite.name, upWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p := UnsubscribePacket{}
-	err = p.Read(&buf)
+	err = upRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", unsubscribeType.name, err)
+		t.Errorf("could not read %s packet: %v", upRead.name, err)
 	}
-	fmt.Println("read that packet!", p)
+	fmt.Printf("read %s packet: %+v\n", upRead.name, upRead)
 }

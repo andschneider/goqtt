@@ -20,29 +20,29 @@ func TestUnsubackPacket(t *testing.T) {
 }
 
 func TestUnsubackPacket_Write(t *testing.T) {
+	var buf bytes.Buffer
+	var uaRead, uaWrite UnsubackPacket
 	suback := bytes.NewBuffer(testUnsubackPacket)
 
-	ua := UnsubackPacket{}
-	err := ua.Read(suback)
+	err := uaRead.Read(suback)
 	if err != nil {
-		t.Errorf("could not read suback packet: %v\n", err)
+		t.Errorf("could not read %s packet: %v\n", uaRead.name, err)
 	}
-	fmt.Printf("read suback packet:  %s\n", &ua)
+	fmt.Printf("read %s packet: %+v\n", uaRead.name, uaRead)
 
 	// create packet
-	var buf bytes.Buffer
-	sp := CreateUnsubackPacket()
-	err = sp.Write(&buf)
+	uaWrite.CreatePacket()
+	err = uaWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write suback packet: %v", err)
+		t.Errorf("could not %s suback packet: %v", uaWrite.name, err)
 	}
-	fmt.Printf("write suback packet: %s\n", &sp)
+	fmt.Printf("write %s packet: %+v\n", uaWrite.name, uaWrite)
 
 	// verify they match
-	if !bytes.Equal(sp.MessageId, ua.MessageId) {
+	if !bytes.Equal(uaRead.MessageId, uaWrite.MessageId) {
 		t.Errorf("unsuback messageids don't match")
 	}
-	if sp.FixedHeader != ua.FixedHeader {
+	if uaRead.FixedHeader != uaWrite.FixedHeader {
 		t.Errorf("unsuback fixedheaders don't match")
 	}
 }

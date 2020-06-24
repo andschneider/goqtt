@@ -14,9 +14,8 @@ var disconnectType = PacketType{
 	packetId: 224,
 }
 
-func CreateDisconnectPacket() (d DisconnectPacket) {
+func (d *DisconnectPacket) CreatePacket() {
 	d.FixedHeader = FixedHeader{PacketType: disconnectType, RemainingLength: 0}
-	return
 }
 
 func (d *DisconnectPacket) String() string {
