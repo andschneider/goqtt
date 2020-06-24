@@ -57,7 +57,7 @@ func Reader(r io.Reader) (interface{}, error) {
 	case connackType.packetId:
 		//fmt.Println("GOT A CONNACK RESPONSE")
 		cp := ConnackPacket{}
-		err = cp.ReadConnackPacket(r)
+		err = cp.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read CONNACK packet: %v", err)
 		}
@@ -73,14 +73,14 @@ func Reader(r io.Reader) (interface{}, error) {
 	case pingRespType.packetId:
 		//log.Println("GOT A PING RESPONSE")
 		pr := PingRespPacket{}
-		err := pr.ReadPingRespPacket(r)
+		err := pr.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read PINGRESP packet: %v", err)
 		}
 	case publishType.packetId:
 		//fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
-		p, err := pp.ReadPublishPacket(r)
+		p, err := pp.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read PUBLISH packet: %v", err)
 		}
@@ -97,7 +97,7 @@ func Reader(r io.Reader) (interface{}, error) {
 	case subackType.packetId:
 		//fmt.Println("GOT A SUBACK RESPONSE")
 		sp := SubackPacket{}
-		err = sp.ReadSubackPacket(r)
+		err = sp.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
 		}

@@ -18,16 +18,16 @@ var publishType = PacketType{
 	packetId: 48,
 }
 
-func (p *PublishPacket) String() string {
-	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
-}
-
 func CreatePublishPacket(topic string, message string) (pp PublishPacket) {
 	pp.FixedHeader = FixedHeader{PacketType: publishType}
 	pp.Topic = topic
 	pp.MessageId = []byte{0, 1}
 	pp.Message = []byte(message)
 	return
+}
+
+func (p *PublishPacket) String() string {
+	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
 }
 
 func (p *PublishPacket) Write(w io.Writer) error {
@@ -46,7 +46,7 @@ func (p *PublishPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (p *PublishPacket) ReadPublishPacket(r io.Reader) (*PublishPacket, error) {
+func (p *PublishPacket) Read(r io.Reader) (*PublishPacket, error) {
 	var fh FixedHeader
 	fh.PacketType = publishType
 	err := fh.read(r)

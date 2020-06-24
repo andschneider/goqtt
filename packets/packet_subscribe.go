@@ -18,16 +18,16 @@ var subscribeType = PacketType{
 	packetId: 130,
 }
 
-func (s *SubscribePacket) String() string {
-	return fmt.Sprintf("%v messageid: %v topics: %s", s.FixedHeader, s.MessageId, s.Topics)
-}
-
 func CreateSubscribePacket(topic string) (sp SubscribePacket) {
 	sp.FixedHeader = FixedHeader{PacketType: subscribeType}
 	sp.MessageId = []byte{0, 1}
 	sp.Topics = []string{topic}
 	sp.Qos = []byte{0}
 	return
+}
+
+func (s *SubscribePacket) String() string {
+	return fmt.Sprintf("%v messageid: %v topics: %s", s.FixedHeader, s.MessageId, s.Topics)
 }
 
 func (s *SubscribePacket) Write(w io.Writer) error {

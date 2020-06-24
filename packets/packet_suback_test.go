@@ -12,7 +12,7 @@ func TestSubackPacket(t *testing.T) {
 	suback := bytes.NewBuffer(testSubackPacket)
 
 	sa := SubackPacket{}
-	err := sa.ReadSubackPacket(suback)
+	err := sa.Read(suback)
 	if err != nil {
 		t.Errorf("could not read suback packet: %v\n", err)
 	}
@@ -23,7 +23,7 @@ func TestSubackPacket_Write(t *testing.T) {
 	suback := bytes.NewBuffer(testSubackPacket)
 
 	sa := SubackPacket{}
-	err := sa.ReadSubackPacket(suback)
+	err := sa.Read(suback)
 	if err != nil {
 		t.Errorf("could not read suback packet: %v\n", err)
 	}

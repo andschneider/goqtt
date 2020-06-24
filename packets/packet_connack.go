@@ -17,16 +17,16 @@ var connackType = PacketType{
 	packetId: 32,
 }
 
-func (c *ConnackPacket) String() string {
-	return fmt.Sprintf("%v sessionpresent: %d returncode: %d", c.FixedHeader, c.SessionPresent, c.ReturnCode)
-}
-
 func CreateConnackPacket() (ca ConnackPacket) {
 	ca.FixedHeader = FixedHeader{PacketType: connackType, RemainingLength: 2}
 	// hardcode for a connect packet with connect flags of 00000010
 	ca.SessionPresent = 0
 	ca.ReturnCode = 0
 	return
+}
+
+func (c *ConnackPacket) String() string {
+	return fmt.Sprintf("%v sessionpresent: %d returncode: %d", c.FixedHeader, c.SessionPresent, c.ReturnCode)
 }
 
 func (c *ConnackPacket) Write(w io.Writer) error {
@@ -43,7 +43,7 @@ func (c *ConnackPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (c *ConnackPacket) ReadConnackPacket(r io.Reader) error {
+func (c *ConnackPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = connackType
 	err := fh.read(r)

@@ -17,10 +17,6 @@ var subackType = PacketType{
 	packetId: 144,
 }
 
-func (sa *SubackPacket) String() string {
-	return fmt.Sprintf("%v messageid: %b returncodes: %b", sa.FixedHeader, sa.MessageId, sa.ReturnCodes)
-}
-
 // CreateSubackPacket creates a SubackPacket with hardcoded values for the message id and return codes
 // The return codes should be expanded to return multiple values, as determined by the number of topics
 // subscribed to.
@@ -30,6 +26,10 @@ func CreateSubackPacket() (sa SubackPacket) {
 	// TODO expand to more than one topic
 	sa.ReturnCodes = []byte{0}
 	return
+}
+
+func (sa *SubackPacket) String() string {
+	return fmt.Sprintf("%v messageid: %b returncodes: %b", sa.FixedHeader, sa.MessageId, sa.ReturnCodes)
 }
 
 func (sa *SubackPacket) Write(w io.Writer) error {
@@ -47,7 +47,7 @@ func (sa *SubackPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (sa *SubackPacket) ReadSubackPacket(r io.Reader) error {
+func (sa *SubackPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = subackType
 	err := fh.read(r)

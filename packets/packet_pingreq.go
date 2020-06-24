@@ -14,13 +14,13 @@ var pingReqType = PacketType{
 	packetId: 192,
 }
 
-func (pp *PingReqPacket) String() string {
-	return fmt.Sprintf("%v", pp.FixedHeader)
-}
-
 func CreatePingReqPacket() (pp PingReqPacket) {
 	pp.FixedHeader = FixedHeader{PacketType: pingReqType, RemainingLength: 0}
 	return
+}
+
+func (pp *PingReqPacket) String() string {
+	return fmt.Sprintf("%v", pp.FixedHeader)
 }
 
 func (pp *PingReqPacket) Write(w io.Writer) error {

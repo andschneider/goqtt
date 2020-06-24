@@ -24,10 +24,6 @@ var connectType = PacketType{
 	packetId: 16,
 }
 
-func (c *ConnectPacket) String() string {
-	return fmt.Sprintf("%v protocolname: %v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolName, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
-}
-
 func CreateConnectPacket() (cp ConnectPacket) {
 	cp.FixedHeader = FixedHeader{PacketType: connectType}
 	cp.ProtocolName = "MQTT"
@@ -37,6 +33,10 @@ func CreateConnectPacket() (cp ConnectPacket) {
 	hostname, _ := os.Hostname()
 	cp.ClientIdentifier = hostname + strconv.Itoa(time.Now().Second())
 	return
+}
+
+func (c *ConnectPacket) String() string {
+	return fmt.Sprintf("%v protocolname: %v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolName, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
 }
 
 func (c *ConnectPacket) Write(w io.Writer) error {

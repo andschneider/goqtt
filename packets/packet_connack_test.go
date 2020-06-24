@@ -18,7 +18,7 @@ func TestConnackPacket(t *testing.T) {
 	connack := bytes.NewBuffer(testConnackPacket)
 
 	ca := ConnackPacket{}
-	err := ca.ReadConnackPacket(connack)
+	err := ca.Read(connack)
 	if err != nil {
 		t.Errorf("could not read connack packet: %v\n", err)
 	}
@@ -30,7 +30,7 @@ func TestConnackPacket_Write(t *testing.T) {
 
 	// correct packet
 	ca := ConnackPacket{}
-	err := ca.ReadConnackPacket(connack)
+	err := ca.Read(connack)
 	if err != nil {
 		t.Errorf("could not read connack packet: %v\n", err)
 	}

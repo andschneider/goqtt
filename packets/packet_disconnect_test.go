@@ -10,7 +10,7 @@ func TestDisconnectPacket_ReadDisconnectPacket(t *testing.T) {
 	disconnect := bytes.NewBuffer([]byte{0})
 
 	d := DisconnectPacket{}
-	err := d.ReadDisconnectPacket(disconnect)
+	err := d.Read(disconnect)
 	if err != nil {
 		t.Errorf("could not read %s packet: %v\n", d.name, err)
 	}
@@ -22,7 +22,7 @@ func TestDisconnectPacket_Write(t *testing.T) {
 
 	// correct packet
 	d := DisconnectPacket{}
-	err := d.ReadDisconnectPacket(disconnect)
+	err := d.Read(disconnect)
 	if err != nil {
 		t.Errorf("could not read %s packet: %v\n", d.name, err)
 	}
