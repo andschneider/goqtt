@@ -10,6 +10,13 @@ import (
 
 const MQTT3 = 4 // 0000100 in binary
 
+type Packet interface {
+	//CreatePacket()
+	String() string
+	Write(io.Writer) error
+	Read(io.Reader) error
+}
+
 // PacketType represents the human readable name and the byte representation of the first byte of the packet header
 type PacketType struct {
 	name     string
@@ -62,6 +69,7 @@ func Reader(r io.Reader) (interface{}, error) {
 			return nil, fmt.Errorf("could not read CONNACK packet: %v", err)
 		}
 		//log.Printf("connack packet: %v", cp)
+		return cp, nil
 	case pingReqType.packetId:
 		//fmt.Println("GOT A PING REQUEST")
 		pr := PingReqPacket{}
@@ -80,12 +88,12 @@ func Reader(r io.Reader) (interface{}, error) {
 	case publishType.packetId:
 		//fmt.Println("GOT A PUBLISH RESPONSE")
 		pp := PublishPacket{}
-		p, err := pp.Read(r)
+		err := pp.Read(r)
 		if err != nil {
 			return nil, fmt.Errorf("could not read PUBLISH packet: %v", err)
 		}
 		// TODO replace this with a callback function
-		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
+		log.Printf("TOPIC: %s MESSAGE: %s\n", pp.Topic, string(pp.Message))
 		return pp, nil
 	case subscribeType.packetId:
 		sp := SubscribePacket{}
@@ -102,6 +110,7 @@ func Reader(r io.Reader) (interface{}, error) {
 			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
 		}
 		//log.Printf("suback packet: %v\n", &sp)
+		return sp, nil
 	case unsubscribeType.packetId:
 		//fmt.Println("GOT AN UNSUBSCRIBE REQUEST")
 		up := UnsubscribePacket{}
@@ -119,7 +128,7 @@ func Reader(r io.Reader) (interface{}, error) {
 			return nil, fmt.Errorf("could not read UNSUBACK packet: %v", err)
 		}
 		//log.Printf("unsuback packet: %s\n", up.String())
-		//return up, nil
+		return up, nil
 	case disconnectType.packetId:
 		//fmt.Println("got a disconnect")
 		return DisconnectPacket{}, nil

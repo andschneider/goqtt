@@ -24,15 +24,16 @@ func TestPublishPacket_Write(t *testing.T) {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p, err := pp.Read(&buf)
+	var ppRead PublishPacket
+	err = ppRead.Read(&buf)
 	if err != nil {
 		t.Errorf("could not read %s packet %v", pp.name, err)
 	}
-	topic := p.Topic
+	topic := ppRead.Topic
 	if topic != testTopic {
 		t.Errorf("topics do not match. expected %s, got %s", testTopic, topic)
 	}
-	ms := string(p.Message)
+	ms := string(ppRead.Message)
 	if ms != message {
 		t.Errorf("messages do not match. expected %s, got %s", message, ms)
 	}
