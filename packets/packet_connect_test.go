@@ -8,22 +8,24 @@ import (
 
 func TestConnectPacket(t *testing.T) {
 	var buf bytes.Buffer
-	cp := CreateConnectPacket()
-	err := cp.Write(&buf)
-	if err != nil {
-		t.Errorf("could not write CONNECT packet: %v", err)
-	}
-	fmt.Printf("connect packet: %s\n", &cp)
+	var cpWrite, cpRead ConnectPacket
 
+	cpWrite.CreatePacket()
+	err := cpWrite.Write(&buf)
+	if err != nil {
+		t.Errorf("could not write %s packet: %v\n", cpWrite.name, err)
+	}
+	fmt.Printf("%s packet write: %+v\n", cpWrite.name, cpWrite)
+
+	// have to read in the type from the fixed header for Read to work
 	packetType, err := decodeByte(&buf)
 	if err != nil {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p := ConnectPacket{}
-	err = p.Read(&buf)
+	err = cpRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", connectType.name, err)
+		t.Errorf("could not read %s packet: %v", cpRead.name, err)
 	}
-	fmt.Println(p)
+	fmt.Printf("%s packet read: %+v\n", cpRead.name, cpRead)
 }

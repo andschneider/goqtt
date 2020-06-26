@@ -14,13 +14,12 @@ var pingRespType = PacketType{
 	packetId: 208,
 }
 
-func (p *PingRespPacket) String() string {
-	return fmt.Sprintf("%v", p.FixedHeader)
+func (p *PingRespPacket) CreatePacket() {
+	p.FixedHeader = FixedHeader{PacketType: pingRespType}
 }
 
-func CreatePingRespPacket() (pp PingRespPacket) {
-	pp.FixedHeader = FixedHeader{PacketType: pingRespType}
-	return
+func (p *PingRespPacket) String() string {
+	return fmt.Sprintf("%v", p.FixedHeader)
 }
 
 func (p *PingRespPacket) Write(w io.Writer) error {
@@ -29,7 +28,7 @@ func (p *PingRespPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (p *PingRespPacket) ReadPingRespPacket(r io.Reader) error {
+func (p *PingRespPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = pingRespType
 	err := fh.read(r)

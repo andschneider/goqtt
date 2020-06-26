@@ -16,14 +16,13 @@ var unsubackType = PacketType{
 	packetId: 176,
 }
 
-func (ua *UnsubackPacket) String() string {
-	return fmt.Sprintf("%v messageid: %b", ua.FixedHeader, ua.MessageId)
-}
-
-func CreateUnsubackPacket() (ua UnsubackPacket) {
+func (ua *UnsubackPacket) CreatePacket() {
 	ua.FixedHeader = FixedHeader{PacketType: unsubackType}
 	ua.MessageId = []byte{0, 1}
-	return
+}
+
+func (ua *UnsubackPacket) String() string {
+	return fmt.Sprintf("%v messageid: %b", ua.FixedHeader, ua.MessageId)
 }
 
 func (ua *UnsubackPacket) Write(w io.Writer) error {

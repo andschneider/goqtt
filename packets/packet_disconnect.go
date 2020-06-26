@@ -14,13 +14,12 @@ var disconnectType = PacketType{
 	packetId: 224,
 }
 
-func (d *DisconnectPacket) String() string {
-	return fmt.Sprintf("%v", d.FixedHeader)
+func (d *DisconnectPacket) CreatePacket() {
+	d.FixedHeader = FixedHeader{PacketType: disconnectType, RemainingLength: 0}
 }
 
-func CreateDisconnectPacket() (d DisconnectPacket) {
-	d.FixedHeader = FixedHeader{PacketType: disconnectType, RemainingLength: 0}
-	return
+func (d *DisconnectPacket) String() string {
+	return fmt.Sprintf("%v", d.FixedHeader)
 }
 
 func (d *DisconnectPacket) Write(w io.Writer) error {
@@ -29,7 +28,7 @@ func (d *DisconnectPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (d *DisconnectPacket) ReadDisconnectPacket(r io.Reader) error {
+func (d *DisconnectPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = disconnectType
 	err := fh.read(r)

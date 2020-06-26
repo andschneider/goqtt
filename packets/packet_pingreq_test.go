@@ -8,22 +8,23 @@ import (
 
 func TestPingReqPacket(t *testing.T) {
 	var buf bytes.Buffer
-	pr := CreatePingReqPacket()
-	err := pr.Write(&buf)
+	var prWrite, prRead PingReqPacket
+
+	prWrite.CreatePacket()
+	err := prWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write PingReq packet %v", err)
+		t.Errorf("could not write %s packet %v", prWrite.name, err)
 	}
-	fmt.Printf("pingreq packet: %s\n", &pr)
+	fmt.Printf("%s packet: %+v\n", prWrite.name, prWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p := PingReqPacket{}
-	err = p.Read(&buf)
+	err = prRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", pingReqType.name, err)
+		t.Errorf("could not read %s packet: %v", prRead.name, err)
 	}
-	fmt.Println("read that packet!", p)
+	fmt.Printf("%s packet: %+v\n", prRead.name, prRead)
 }

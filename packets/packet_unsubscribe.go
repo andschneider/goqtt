@@ -17,15 +17,14 @@ var unsubscribeType = PacketType{
 	packetId: 162,
 }
 
-func (up *UnsubscribePacket) String() string {
-	return fmt.Sprintf("%v messageid: %b topics %s", up.FixedHeader, up.MessageId, up.Topics)
-}
-
-func CreateUnsubscribePacket(topic string) (up UnsubscribePacket) {
+func (up *UnsubscribePacket) CreatePacket(topic string) {
 	up.FixedHeader = FixedHeader{PacketType: unsubscribeType}
 	up.MessageId = []byte{0, 1}
 	up.Topics = []string{topic}
-	return
+}
+
+func (up *UnsubscribePacket) String() string {
+	return fmt.Sprintf("%v messageid: %b topics %s", up.FixedHeader, up.MessageId, up.Topics)
 }
 
 func (up *UnsubscribePacket) Write(w io.Writer) error {

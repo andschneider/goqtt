@@ -14,38 +14,46 @@ const (
 
 var testConnackPacket = []byte{byte(remainingLength), byte(sessionPresent), byte(returnCode)}
 
-func TestConnackPacket(t *testing.T) {
+// Test reading in a connack packet
+func TestConnackPacket_Read(t *testing.T) {
+	var ca ConnackPacket
 	connack := bytes.NewBuffer(testConnackPacket)
 
-	ca := ConnackPacket{}
-	err := ca.ReadConnackPacket(connack)
+	err := ca.Read(connack)
 	if err != nil {
-		t.Errorf("could not read connack packet: %v\n", err)
+		t.Errorf("could not read %s packet: %v\n", ca.name, err)
 	}
-	fmt.Printf("connack packet: %s\n", &ca)
+	fmt.Printf("%s packet: %+v\n", ca.name, ca)
 }
 
+// Test writing a packet to a buffer
 func TestConnackPacket_Write(t *testing.T) {
+	var buf bytes.Buffer
+	var ca ConnackPacket
+
+	ca.CreatePacket()
+	err := ca.Write(&buf)
+	if err != nil {
+		t.Errorf("could not write %s packet: %v\n", ca.name, err)
+	}
+	fmt.Printf("%s packet: %+v\n", ca.name, ca)
+}
+
+// Test comparing a default packet to one read in
+func TestConnackPacket_Compare(t *testing.T) {
+	var caRead, caDefault ConnackPacket
 	connack := bytes.NewBuffer(testConnackPacket)
 
 	// correct packet
-	ca := ConnackPacket{}
-	err := ca.ReadConnackPacket(connack)
+	err := caRead.Read(connack)
 	if err != nil {
-		t.Errorf("could not read connack packet: %v\n", err)
+		t.Errorf("could not read %s packet: %v\n", caRead.name, err)
 	}
-	fmt.Printf("connack packet: %s\n", &ca)
 
-	// create packet
-	var buf bytes.Buffer
-	cp := CreateConnackPacket()
-	err = cp.Write(&buf)
-	if err != nil {
-		t.Errorf("could not write CONNACK packet: %v", err)
-	}
-	fmt.Printf("connack packet: %s\n", &cp)
+	// default packet
+	caDefault.CreatePacket()
 
-	if cp != ca {
+	if caRead != caDefault {
 		t.Errorf("connack packets don't match")
 	}
 }

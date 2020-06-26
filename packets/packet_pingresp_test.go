@@ -8,10 +8,12 @@ import (
 
 func TestPingRespPacket(t *testing.T) {
 	var buf bytes.Buffer
-	pr := CreatePingRespPacket()
+	var pr PingRespPacket
+
+	pr.CreatePacket()
 	err := pr.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write PingResp packet %v", err)
+		t.Errorf("could not write %s packet %v", pr.name, err)
 	}
-	fmt.Printf("pingresp packet: %s\n", &pr)
+	fmt.Printf("%s packet: %+v\n", pr.name, pr)
 }

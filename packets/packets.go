@@ -5,10 +5,16 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
 )
 
 const MQTT3 = 4 // 0000100 in binary
+
+type Packet interface {
+	//CreatePacket()
+	String() string
+	Write(io.Writer) error
+	Read(io.Reader) error
+}
 
 // PacketType represents the human readable name and the byte representation of the first byte of the packet header
 type PacketType struct {
@@ -38,98 +44,48 @@ func (fh *FixedHeader) read(r io.Reader) (err error) {
 	return err
 }
 
-// Reader reads in a packet from a TCP connection, determining packet type based on the first byte of the packet.
-func Reader(r io.Reader) (interface{}, error) {
-	pid, err := decodeByte(r)
+// ReadPacket tries to read a Packet from a TCP connection.
+func ReadPacket(r io.Reader) (Packet, error) {
+	packetId, err := decodeByte(r)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode byte from fixed header while reading packet: %v", err)
-	}
-	switch pid {
-	case connectType.packetId:
-		//fmt.Println("GOT A CONNECT")
-		cp := ConnectPacket{}
-		err = cp.Read(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read %s packet: %v", connectType.name, err)
-		}
-		//fmt.Printf("connect packet: %v\n", &cp)
-		return cp, nil
-	case connackType.packetId:
-		//fmt.Println("GOT A CONNACK RESPONSE")
-		cp := ConnackPacket{}
-		err = cp.ReadConnackPacket(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read CONNACK packet: %v", err)
-		}
-		//log.Printf("connack packet: %v", cp)
-	case pingReqType.packetId:
-		//fmt.Println("GOT A PING REQUEST")
-		pr := PingReqPacket{}
-		err := pr.Read(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read %s packet: %v", pingReqType.name, err)
-		}
-		return pr, nil
-	case pingRespType.packetId:
-		//log.Println("GOT A PING RESPONSE")
-		pr := PingRespPacket{}
-		err := pr.ReadPingRespPacket(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read PINGRESP packet: %v", err)
-		}
-	case publishType.packetId:
-		//fmt.Println("GOT A PUBLISH RESPONSE")
-		pp := PublishPacket{}
-		p, err := pp.ReadPublishPacket(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read PUBLISH packet: %v", err)
-		}
-		// TODO replace this with a callback function
-		log.Printf("TOPIC: %s MESSAGE: %s\n", p.Topic, string(p.Message))
-		return pp, nil
-	case subscribeType.packetId:
-		sp := SubscribePacket{}
-		err := sp.Read(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read %s packet: %v", subscribeType.name, err)
-		}
-		return sp, nil
-	case subackType.packetId:
-		//fmt.Println("GOT A SUBACK RESPONSE")
-		sp := SubackPacket{}
-		err = sp.ReadSubackPacket(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read SUBACK packet: %v", err)
-		}
-		//log.Printf("suback packet: %v\n", &sp)
-	case unsubscribeType.packetId:
-		//fmt.Println("GOT AN UNSUBSCRIBE REQUEST")
-		up := UnsubscribePacket{}
-		err = up.Read(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read UNSUBSCRIBE packet: %v", err)
-		}
-		//log.Printf("unsubscribe packet: %s\n", up.String())
-		return up, nil
-	case unsubackType.packetId:
-		//fmt.Println("GOT AN UNSUBACK RESPONSE")
-		up := UnsubackPacket{}
-		err = up.Read(r)
-		if err != nil {
-			return nil, fmt.Errorf("could not read UNSUBACK packet: %v", err)
-		}
-		//log.Printf("unsuback packet: %s\n", up.String())
-		//return up, nil
-	case disconnectType.packetId:
-		//fmt.Println("got a disconnect")
-		return DisconnectPacket{}, nil
-	case 0:
-		return nil, io.EOF
-	default:
-		log.Printf("Type read in was not accounted for: %v\n", pid)
+		return nil, err
 	}
 
-	return nil, nil
+	p, err := NewPacket(packetId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.Read(r)
+	return p, err
+}
+
+// NewPacket creates an empty Packet according to the packetId parameter. The FixedHeader is set later in the packet's
+// Read method
+func NewPacket(packetId byte) (Packet, error) {
+	switch packetId {
+	case connackType.packetId:
+		return &ConnackPacket{}, nil
+	case connectType.packetId:
+		return &ConnectPacket{}, nil
+	case disconnectType.packetId:
+		return &DisconnectPacket{}, nil
+	case pingReqType.packetId:
+		return &PingReqPacket{}, nil
+	case pingRespType.packetId:
+		return &PingRespPacket{}, nil
+	case publishType.packetId:
+		return &PublishPacket{}, nil
+	case subackType.packetId:
+		return &SubackPacket{}, nil
+	case subscribeType.packetId:
+		return &SubscribePacket{}, nil
+	case unsubackType.packetId:
+		return &UnsubackPacket{}, nil
+	case unsubscribeType.packetId:
+		return &UnsubscribePacket{}, nil
+	}
+	return nil, fmt.Errorf("packet type not accounted for: %v\n", packetId)
 }
 
 func encodeLength(length int) []byte {

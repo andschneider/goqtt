@@ -18,16 +18,15 @@ var publishType = PacketType{
 	packetId: 48,
 }
 
-func (p *PublishPacket) String() string {
-	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
+func (p *PublishPacket) CreatePacket(topic string, message string) {
+	p.FixedHeader = FixedHeader{PacketType: publishType}
+	p.Topic = topic
+	p.MessageId = []byte{0, 1}
+	p.Message = []byte(message)
 }
 
-func CreatePublishPacket(topic string, message string) (pp PublishPacket) {
-	pp.FixedHeader = FixedHeader{PacketType: publishType}
-	pp.Topic = topic
-	pp.MessageId = []byte{0, 1}
-	pp.Message = []byte(message)
-	return
+func (p *PublishPacket) String() string {
+	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
 }
 
 func (p *PublishPacket) Write(w io.Writer) error {
@@ -46,37 +45,40 @@ func (p *PublishPacket) Write(w io.Writer) error {
 	return err
 }
 
-func (p *PublishPacket) ReadPublishPacket(r io.Reader) (*PublishPacket, error) {
+func (p *PublishPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = publishType
 	err := fh.read(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	packetBytes := make([]byte, fh.RemainingLength)
 	n, err := io.ReadFull(r, packetBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if n != fh.RemainingLength {
-		return nil, fmt.Errorf("failed to read expected data from PUBLISH packet: %v", err)
+		return fmt.Errorf("failed to read expected data from PUBLISH packet: %v", err)
 	}
 
 	mes := bytes.NewBuffer(packetBytes)
 	p.FixedHeader = fh
 	p.Topic, err = decodeString(mes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// would change if QOS wasn't always 0
 	var payloadLength = p.RemainingLength
 	payloadLength -= len(p.Topic) + 2
 	if payloadLength < 0 {
-		return nil, fmt.Errorf("error unpacking PUBLISH payload, payload length < 0")
+		return fmt.Errorf("error unpacking PUBLISH payload, payload length < 0")
 	}
 	p.Message = make([]byte, payloadLength)
 	_, err = mes.Read(p.Message)
-	return p, err
+	if err != nil {
+		return err
+	}
+	return nil
 }

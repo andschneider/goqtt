@@ -6,38 +6,45 @@ import (
 	"testing"
 )
 
-func TestDisconnectPacket_ReadDisconnectPacket(t *testing.T) {
+func TestDisconnectPacket_Read(t *testing.T) {
+	var d DisconnectPacket
 	disconnect := bytes.NewBuffer([]byte{0})
 
-	d := DisconnectPacket{}
-	err := d.ReadDisconnectPacket(disconnect)
+	err := d.Read(disconnect)
 	if err != nil {
 		t.Errorf("could not read %s packet: %v\n", d.name, err)
 	}
-	fmt.Printf("%s packet: %s\n", d.name, &d)
+	fmt.Printf("read %s packet: %+v\n", d.name, d)
 }
 
 func TestDisconnectPacket_Write(t *testing.T) {
+	var buf bytes.Buffer
+	var d DisconnectPacket
+
+	d.CreatePacket()
+	err := d.Write(&buf)
+	if err != nil {
+		t.Errorf("could not write %s packet: %v\n", d.name, err)
+	}
+	fmt.Printf("write %s packet: %+v\n", d.name, d)
+}
+
+func TestDisconnectPacket_Compare(t *testing.T) {
+	var dRead, dDefault DisconnectPacket
 	disconnect := bytes.NewBuffer([]byte{0})
 
 	// correct packet
-	d := DisconnectPacket{}
-	err := d.ReadDisconnectPacket(disconnect)
+	err := dRead.Read(disconnect)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", d.name, err)
+		t.Errorf("could not read %s packet: %v\n", dRead.name, err)
 	}
-	fmt.Printf("%s packet: %s\n", d.name, &d)
+	fmt.Printf("read %s packet: %+v\n", dRead.name, dRead)
 
 	// create packet
-	var buf bytes.Buffer
-	dp := CreateDisconnectPacket()
-	err = dp.Write(&buf)
-	if err != nil {
-		t.Errorf("could not write %s packet: %v", dp.name, err)
-	}
-	fmt.Printf("%s packet: %s\n", dp.name, &dp)
+	dDefault.CreatePacket()
+	fmt.Printf("default %s packet: %+v\n", dDefault.name, dDefault)
 
-	if dp != d {
-		t.Errorf("%s packets don't match\n", dp.name)
+	if dRead != dDefault {
+		t.Errorf("%s packets don't match\n", dRead.name)
 	}
 }

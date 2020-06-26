@@ -7,29 +7,33 @@ import (
 )
 
 func TestPublishPacket_Write(t *testing.T) {
-	message := "hello world"
-	pp := CreatePublishPacket(testTopic, message)
 	var buf bytes.Buffer
+	var pp PublishPacket
+
+	message := "hello world"
+	pp.CreatePacket(testTopic, message)
+
 	err := pp.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write Publish packet %v", err)
+		t.Errorf("could not write %s packet %v", pp.name, err)
 	}
-	fmt.Printf("publish packet: %s\n", &pp)
+	fmt.Printf("%s packet: %+v\n", pp.name, pp)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
 		t.Errorf("could not decode type from fixed header. got %v", packetType)
 	}
 
-	p, err := pp.ReadPublishPacket(&buf)
+	var ppRead PublishPacket
+	err = ppRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read Publish packer %v", err)
+		t.Errorf("could not read %s packet %v", pp.name, err)
 	}
-	topic := p.Topic
+	topic := ppRead.Topic
 	if topic != testTopic {
 		t.Errorf("topics do not match. expected %s, got %s", testTopic, topic)
 	}
-	ms := string(p.Message)
+	ms := string(ppRead.Message)
 	if ms != message {
 		t.Errorf("messages do not match. expected %s, got %s", message, ms)
 	}
