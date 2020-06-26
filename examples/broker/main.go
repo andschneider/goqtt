@@ -118,7 +118,7 @@ func handleConnection(c net.Conn) {
 			//log.Println("Client disconnect channel is closed!")
 			break
 		}
-		p, err := packets.Reader(c)
+		p, err := packets.ReadPacket(c)
 		if err != nil {
 			if err == io.EOF {
 				// TODO do i care about EOFs?
@@ -133,10 +133,10 @@ func handleConnection(c net.Conn) {
 		switch t := p.(type) {
 		// try to read connection packet first
 		// what if it's not a connection packet for a new client?
-		case packets.ConnectPacket:
+		case *packets.ConnectPacket:
 			log.Printf("connect packet recieved %v", p)
 			// read in connection information and register new client with broker
-			cp := p.(packets.ConnectPacket)
+			cp := p.(*packets.ConnectPacket)
 			to := float64(cp.KeepAlive[1]) * 1.5 // timeout is 1.5 times the keep alive time
 			cli = client{
 				out:      c,
@@ -161,10 +161,10 @@ func handleConnection(c net.Conn) {
 			if err != nil {
 				log.Printf("could not send CONNACK packet: %v", err)
 			}
-		case packets.SubscribePacket:
+		case *packets.SubscribePacket:
 			log.Printf("subscribe packet recieved %v", p)
 			// read subscribe packet
-			sp := p.(packets.SubscribePacket)
+			sp := p.(*packets.SubscribePacket)
 			for _, t := range sp.Topics {
 				cli.topic = t
 				subscribe <- cli // send topic info
@@ -177,7 +177,7 @@ func handleConnection(c net.Conn) {
 			if err != nil {
 				log.Printf("could not send SUBACK packet: %v", err)
 			}
-		case packets.PingReqPacket:
+		case *packets.PingReqPacket:
 			log.Printf("ping request received %v", p)
 			// reset timeout
 			timer.Reset(cli.timeout)
@@ -189,14 +189,14 @@ func handleConnection(c net.Conn) {
 			if err != nil {
 				log.Printf("could not send PINGRESP packet: %v", err)
 			}
-		case packets.PublishPacket:
-			var pRead, pWrite packets.PublishPacket
+		case *packets.PublishPacket:
+			var pWrite packets.PublishPacket
 			log.Printf("publish received %v", p)
 			// reset timeout
 			timer.Reset(cli.timeout)
 
 			// read publish packet
-			pRead = p.(packets.PublishPacket)
+			pRead := p.(*packets.PublishPacket)
 
 			// send publish packet to be distributed to clients
 			pWrite.CreatePacket(pRead.Topic, string(pRead.Message))
@@ -205,7 +205,7 @@ func handleConnection(c net.Conn) {
 			// disconnect client after sending a message
 			close(done) // close done channel to alert disconnect function
 			leaving <- cli
-		case packets.UnsubscribePacket:
+		case *packets.UnsubscribePacket:
 			var u packets.UnsubackPacket
 			log.Printf("unsubscribe request received %v", p)
 			// reset timeout
@@ -220,7 +220,7 @@ func handleConnection(c net.Conn) {
 
 			// tell broker to remove client from subscription map
 			unsubscribe <- cli
-		case packets.DisconnectPacket:
+		case *packets.DisconnectPacket:
 			log.Printf("disconnect received %v", p)
 			close(done) // close done channel to alert disconnect function
 			leaving <- cli

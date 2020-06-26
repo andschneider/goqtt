@@ -46,7 +46,7 @@ func SendPing(c net.Conn, verbose bool) error {
 	// response
 	// why did i make this a goroutine?
 	go func() {
-		_, err = packets.Reader(c)
+		_, err = packets.ReadPacket(c)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -69,7 +69,7 @@ func SendConnect(c net.Conn, verbose bool) error {
 	}
 
 	// response
-	_, err = packets.Reader(c)
+	_, err = packets.ReadPacket(c)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -91,7 +91,7 @@ func SendSubscribe(c net.Conn, topic string, verbose bool) error {
 	}
 
 	// response
-	_, err = packets.Reader(c)
+	_, err = packets.ReadPacket(c)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -113,7 +113,7 @@ func SendUnsubscribe(c net.Conn, topic string, verbose bool) error {
 	}
 
 	// response
-	_, err = packets.Reader(c)
+	_, err = packets.ReadPacket(c)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -160,8 +160,12 @@ func SubscribeLoop(conn net.Conn, verbose bool) {
 
 	for {
 		//log.Println("start loop")
-		// TODO add callback function to process packet from Reader
-		_, err := packets.Reader(conn)
+		p, err := packets.ReadPacket(conn)
+		// process packets based on type
+		switch packet := p.(type) {
+		case *packets.PublishPacket:
+			log.Printf("TOPIC: %s MESSAGE: %s\n", packet.Topic, string(packet.Message))
+		}
 		if err != nil {
 			if err == io.EOF {
 				log.Println("Looks like the server closed the connection...")

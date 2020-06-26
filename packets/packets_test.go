@@ -21,30 +21,29 @@ func TestFixedHeader(t *testing.T) {
 	}
 }
 
+// Adds the packetId to the packet
+var testFullConnackPacket = []byte{byte(32), byte(remainingLength), byte(sessionPresent), byte(returnCode)}
+
 func TestReaderWithConnack(t *testing.T) {
 	connack := bytes.NewBuffer(testConnackPacket)
 
-	// read packet
+	// read packet using the Read method directly
 	var ca ConnackPacket
 	err := ca.Read(connack)
 	if err != nil {
 		t.Errorf("could not read %s packet: %v\n", ca.name, err)
 	}
 
-	var b bytes.Buffer
-	err = ca.Write(&b)
+	// Use the ReadPacket functon to return a Packet interface
+	c2 := bytes.NewBuffer(testFullConnackPacket)
+	p, err := ReadPacket(c2)
 	if err != nil {
-		t.Errorf("could not write %s packet: %v\n", ca.name, err)
+		t.Errorf("could not use ReadPacke: %v\n", err)
 	}
+	caNew := p.(*ConnackPacket)
+	fmt.Printf("packet type is: %T\n", caNew)
 
-	p, err := Reader(&b)
-	if err != nil {
-		t.Errorf("could not use Reader: %v\n", err)
+	if *caNew != ca {
+		t.Errorf("packets don't match:\n%+v\n%+v", *caNew, ca)
 	}
-	fmt.Printf("packet type is: %T\n", p)
-
-	if p != ca {
-		t.Errorf("packets don't match:\n%+v\n%+v", p, ca)
-	}
-
 }
