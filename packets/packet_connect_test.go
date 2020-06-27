@@ -13,9 +13,9 @@ func TestConnectPacket(t *testing.T) {
 	cpWrite.CreatePacket()
 	err := cpWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet: %v\n", cpWrite.name, err)
+		t.Errorf("could not write %s packet: %v\n", cpWrite.Name, err)
 	}
-	fmt.Printf("%s packet write: %+v\n", cpWrite.name, cpWrite)
+	fmt.Printf("%s packet write: %+v\n", cpWrite.Name, cpWrite)
 
 	// have to read in the type from the fixed header for Read to work
 	packetType, err := decodeByte(&buf)
@@ -25,7 +25,7 @@ func TestConnectPacket(t *testing.T) {
 
 	err = cpRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", cpRead.name, err)
+		t.Errorf("could not read %s packet: %v", cpRead.Name, err)
 	}
-	fmt.Printf("%s packet read: %+v\n", cpRead.name, cpRead)
+	fmt.Printf("%s packet read: %+v\n", cpRead.Name, cpRead)
 }

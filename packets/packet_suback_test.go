@@ -16,7 +16,7 @@ func TestSubackPacket(t *testing.T) {
 	if err != nil {
 		t.Errorf("could not read suback packet: %v\n", err)
 	}
-	fmt.Printf("%s packet: %+v\n", sa.name, sa)
+	fmt.Printf("%s packet: %+v\n", sa.Name, sa)
 }
 
 func TestSubackPacket_Write(t *testing.T) {
@@ -26,17 +26,17 @@ func TestSubackPacket_Write(t *testing.T) {
 
 	err := saRead.Read(suback)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", saRead.name, err)
+		t.Errorf("could not read %s packet: %v\n", saRead.Name, err)
 	}
-	fmt.Printf("read %s packet: %+v\n", saRead.name, saRead)
+	fmt.Printf("read %s packet: %+v\n", saRead.Name, saRead)
 
 	// create packet
 	saWrite.CreatePacket()
 	err = saWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not %s suback packet: %v", saWrite.name, err)
+		t.Errorf("could not %s suback packet: %v", saWrite.Name, err)
 	}
-	fmt.Printf("write %s packet: %+v\n", saWrite.name, saWrite)
+	fmt.Printf("write %s packet: %+v\n", saWrite.Name, saWrite)
 
 	// verify they match
 	if !bytes.Equal(saRead.MessageId, saWrite.MessageId) {

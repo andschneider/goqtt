@@ -20,7 +20,7 @@ type ConnectPacket struct {
 }
 
 var connectType = PacketType{
-	name:     "CONNECT",
+	Name:     "CONNECT",
 	packetId: 16,
 }
 

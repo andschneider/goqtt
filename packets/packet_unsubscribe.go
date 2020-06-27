@@ -13,7 +13,7 @@ type UnsubscribePacket struct {
 }
 
 var unsubscribeType = PacketType{
-	name:     "UNSUBSCRIBE",
+	Name:     "UNSUBSCRIBE",
 	packetId: 162,
 }
 

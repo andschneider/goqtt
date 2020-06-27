@@ -13,9 +13,9 @@ func TestUnsubscribePacket(t *testing.T) {
 	upWrite.CreatePacket(testTopic)
 	err := upWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet %v", upWrite.name, err)
+		t.Errorf("could not write %s packet %v", upWrite.Name, err)
 	}
-	fmt.Printf("write %s packet: %+v\n", upWrite.name, upWrite)
+	fmt.Printf("write %s packet: %+v\n", upWrite.Name, upWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
@@ -24,7 +24,7 @@ func TestUnsubscribePacket(t *testing.T) {
 
 	err = upRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", upRead.name, err)
+		t.Errorf("could not read %s packet: %v", upRead.Name, err)
 	}
-	fmt.Printf("read %s packet: %+v\n", upRead.name, upRead)
+	fmt.Printf("read %s packet: %+v\n", upRead.Name, upRead)
 }

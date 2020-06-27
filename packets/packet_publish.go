@@ -14,7 +14,7 @@ type PublishPacket struct {
 }
 
 var publishType = PacketType{
-	name:     "PUBLISH",
+	Name:     "PUBLISH",
 	packetId: 48,
 }
 

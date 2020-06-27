@@ -13,7 +13,7 @@ type SubackPacket struct {
 }
 
 var subackType = PacketType{
-	name:     "SUBACK",
+	Name:     "SUBACK",
 	packetId: 144,
 }
 

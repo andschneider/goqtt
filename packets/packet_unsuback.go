@@ -12,7 +12,7 @@ type UnsubackPacket struct {
 }
 
 var unsubackType = PacketType{
-	name:     "UNSUBACK",
+	Name:     "UNSUBACK",
 	packetId: 176,
 }
 

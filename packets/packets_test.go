@@ -31,7 +31,7 @@ func TestReaderWithConnack(t *testing.T) {
 	var ca ConnackPacket
 	err := ca.Read(connack)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", ca.name, err)
+		t.Errorf("could not read %s packet: %v\n", ca.Name, err)
 	}
 
 	// Use the ReadPacket functon to return a Packet interface

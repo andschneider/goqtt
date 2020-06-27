@@ -18,7 +18,7 @@ type Packet interface {
 
 // PacketType represents the human readable name and the byte representation of the first byte of the packet header
 type PacketType struct {
-	name     string
+	Name     string
 	packetId byte
 }
 
@@ -29,7 +29,7 @@ type FixedHeader struct {
 }
 
 func (fh *FixedHeader) String() string {
-	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.name, fh.RemainingLength)
+	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.Name, fh.RemainingLength)
 }
 
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {

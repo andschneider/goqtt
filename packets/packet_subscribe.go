@@ -14,7 +14,7 @@ type SubscribePacket struct {
 }
 
 var subscribeType = PacketType{
-	name:     "SUBSCRIBE",
+	Name:     "SUBSCRIBE",
 	packetId: 130,
 }
 

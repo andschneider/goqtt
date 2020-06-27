@@ -13,7 +13,7 @@ type ConnackPacket struct {
 }
 
 var connackType = PacketType{
-	name:     "CONNACK",
+	Name:     "CONNACK",
 	packetId: 32,
 }
 

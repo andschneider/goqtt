@@ -10,7 +10,7 @@ type PingRespPacket struct {
 }
 
 var pingRespType = PacketType{
-	name:     "PINGRESP",
+	Name:     "PINGRESP",
 	packetId: 208,
 }
 

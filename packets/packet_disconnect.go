@@ -10,7 +10,7 @@ type DisconnectPacket struct {
 }
 
 var disconnectType = PacketType{
-	name:     "DISCONNECT",
+	Name:     "DISCONNECT",
 	packetId: 224,
 }
 

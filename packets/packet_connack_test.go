@@ -21,9 +21,9 @@ func TestConnackPacket_Read(t *testing.T) {
 
 	err := ca.Read(connack)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", ca.name, err)
+		t.Errorf("could not read %s packet: %v\n", ca.Name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", ca.name, ca)
+	fmt.Printf("%s packet: %+v\n", ca.Name, ca)
 }
 
 // Test writing a packet to a buffer
@@ -34,9 +34,9 @@ func TestConnackPacket_Write(t *testing.T) {
 	ca.CreatePacket()
 	err := ca.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet: %v\n", ca.name, err)
+		t.Errorf("could not write %s packet: %v\n", ca.Name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", ca.name, ca)
+	fmt.Printf("%s packet: %+v\n", ca.Name, ca)
 }
 
 // Test comparing a default packet to one read in
@@ -47,7 +47,7 @@ func TestConnackPacket_Compare(t *testing.T) {
 	// correct packet
 	err := caRead.Read(connack)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", caRead.name, err)
+		t.Errorf("could not read %s packet: %v\n", caRead.Name, err)
 	}
 
 	// default packet
