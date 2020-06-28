@@ -14,8 +14,12 @@ type SubscribePacket struct {
 }
 
 var subscribeType = PacketType{
-	Name:     "SUBSCRIBE",
+	name:     "SUBSCRIBE",
 	packetId: 130,
+}
+
+func (s *SubscribePacket) Name() string {
+	return s.name
 }
 
 func (s *SubscribePacket) CreatePacket(topic string) {

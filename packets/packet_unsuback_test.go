@@ -26,17 +26,17 @@ func TestUnsubackPacket_Write(t *testing.T) {
 
 	err := uaRead.Read(suback)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", uaRead.Name, err)
+		t.Errorf("could not read %s packet: %v\n", uaRead.name, err)
 	}
-	fmt.Printf("read %s packet: %+v\n", uaRead.Name, uaRead)
+	fmt.Printf("read %s packet: %+v\n", uaRead.name, uaRead)
 
 	// create packet
 	uaWrite.CreatePacket()
 	err = uaWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not %s suback packet: %v", uaWrite.Name, err)
+		t.Errorf("could not %s suback packet: %v", uaWrite.name, err)
 	}
-	fmt.Printf("write %s packet: %+v\n", uaWrite.Name, uaWrite)
+	fmt.Printf("write %s packet: %+v\n", uaWrite.name, uaWrite)
 
 	// verify they match
 	if !bytes.Equal(uaRead.MessageId, uaWrite.MessageId) {

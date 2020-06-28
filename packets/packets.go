@@ -10,6 +10,7 @@ import (
 const MQTT3 = 4 // 0000100 in binary
 
 type Packet interface {
+	Name() string
 	//CreatePacket()
 	String() string
 	Write(io.Writer) error
@@ -18,7 +19,7 @@ type Packet interface {
 
 // PacketType represents the human readable name and the byte representation of the first byte of the packet header
 type PacketType struct {
-	Name     string
+	name     string
 	packetId byte
 }
 
@@ -29,7 +30,7 @@ type FixedHeader struct {
 }
 
 func (fh *FixedHeader) String() string {
-	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.Name, fh.RemainingLength)
+	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.name, fh.RemainingLength)
 }
 
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {

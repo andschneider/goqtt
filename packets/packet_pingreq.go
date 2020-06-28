@@ -10,8 +10,12 @@ type PingReqPacket struct {
 }
 
 var pingReqType = PacketType{
-	Name:     "PINGREQ",
+	name:     "PINGREQ",
 	packetId: 192,
+}
+
+func (pp *PingReqPacket) Name() string {
+	return pp.name
 }
 
 func (pp *PingReqPacket) CreatePacket() {

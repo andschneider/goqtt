@@ -10,8 +10,12 @@ type DisconnectPacket struct {
 }
 
 var disconnectType = PacketType{
-	Name:     "DISCONNECT",
+	name:     "DISCONNECT",
 	packetId: 224,
+}
+
+func (d *DisconnectPacket) Name() string {
+	return d.name
 }
 
 func (d *DisconnectPacket) CreatePacket() {

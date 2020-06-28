@@ -13,9 +13,9 @@ func TestSubscribePacket(t *testing.T) {
 	spWrite.CreatePacket(testTopic)
 	err := spWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet: %v", spWrite.Name, err)
+		t.Errorf("could not write %s packet: %v", spWrite.name, err)
 	}
-	fmt.Printf("write %s packet: %+v\n", spWrite.Name, spWrite)
+	fmt.Printf("write %s packet: %+v\n", spWrite.name, spWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
@@ -24,7 +24,7 @@ func TestSubscribePacket(t *testing.T) {
 
 	err = spRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", spRead.Name, err)
+		t.Errorf("could not read %s packet: %v", spRead.name, err)
 	}
-	fmt.Printf("read %s packet: %+v\n", spRead.Name, spRead)
+	fmt.Printf("read %s packet: %+v\n", spRead.name, spRead)
 }

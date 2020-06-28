@@ -13,7 +13,7 @@ func TestPingRespPacket(t *testing.T) {
 	pr.CreatePacket()
 	err := pr.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet %v", pr.Name, err)
+		t.Errorf("could not write %s packet %v", pr.name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", pr.Name, pr)
+	fmt.Printf("%s packet: %+v\n", pr.name, pr)
 }

@@ -20,8 +20,12 @@ type ConnectPacket struct {
 }
 
 var connectType = PacketType{
-	Name:     "CONNECT",
+	name:     "CONNECT",
 	packetId: 16,
+}
+
+func (c *ConnectPacket) Name() string {
+	return c.name
 }
 
 func (c *ConnectPacket) CreatePacket() {

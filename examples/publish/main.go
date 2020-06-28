@@ -17,6 +17,7 @@ import (
 	"net"
 
 	"github.com/andschneider/goqtt"
+	"github.com/rs/zerolog"
 )
 
 func main() {
@@ -27,13 +28,19 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
+	// Set log level to debug if verbose is passed in
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *verbose {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	conn, err := net.Dial("tcp", *server+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
-	err = goqtt.SendConnect(conn, *verbose)
+	err = goqtt.SendConnect(conn)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -41,7 +48,7 @@ func main() {
 	log.Printf("connected to %s:%s\n", *server, *port)
 
 	// create publish packet
-	err = goqtt.SendPublish(conn, *topic, *message, *verbose)
+	err = goqtt.SendPublish(conn, *topic, *message)
 	if err != nil {
 		log.Fatal(err)
 		return

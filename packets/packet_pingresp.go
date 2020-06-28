@@ -10,8 +10,12 @@ type PingRespPacket struct {
 }
 
 var pingRespType = PacketType{
-	Name:     "PINGRESP",
+	name:     "PINGRESP",
 	packetId: 208,
+}
+
+func (p *PingRespPacket) Name() string {
+	return p.name
 }
 
 func (p *PingRespPacket) CreatePacket() {

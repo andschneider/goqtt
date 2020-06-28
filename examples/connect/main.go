@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/andschneider/goqtt"
+	"github.com/rs/zerolog"
 )
 
 func main() {
@@ -25,13 +26,19 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
+	// Set log level to debug if verbose is passed in
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *verbose {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	conn, err := net.Dial("tcp", *server+":"+*port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
 
-	err = goqtt.SendConnect(conn, *verbose)
+	err = goqtt.SendConnect(conn)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -39,7 +46,7 @@ func main() {
 
 	log.Printf("connected to %s:%s\n", *server, *port)
 
-	err = goqtt.SendSubscribe(conn, *topic, *verbose)
+	err = goqtt.SendSubscribe(conn, *topic)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -50,7 +57,7 @@ func main() {
 	log.Printf("sleeping for %s\n", sleep)
 	time.Sleep(sleep)
 
-	err = goqtt.SendUnsubscribe(conn, *topic, *verbose)
+	err = goqtt.SendUnsubscribe(conn, *topic)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -62,7 +69,7 @@ func main() {
 	time.Sleep(sleep)
 
 	log.Println("sending a disconnect request")
-	err = goqtt.SendDisconnect(conn, *verbose)
+	err = goqtt.SendDisconnect(conn)
 	if err != nil {
 		log.Fatal(err)
 		return

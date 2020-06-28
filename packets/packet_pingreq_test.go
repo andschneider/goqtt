@@ -13,9 +13,9 @@ func TestPingReqPacket(t *testing.T) {
 	prWrite.CreatePacket()
 	err := prWrite.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet %v", prWrite.Name, err)
+		t.Errorf("could not write %s packet %v", prWrite.name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", prWrite.Name, prWrite)
+	fmt.Printf("%s packet: %+v\n", prWrite.name, prWrite)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
@@ -24,7 +24,7 @@ func TestPingReqPacket(t *testing.T) {
 
 	err = prRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet: %v", prRead.Name, err)
+		t.Errorf("could not read %s packet: %v", prRead.name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", prRead.Name, prRead)
+	fmt.Printf("%s packet: %+v\n", prRead.name, prRead)
 }

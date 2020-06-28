@@ -13,8 +13,12 @@ type UnsubscribePacket struct {
 }
 
 var unsubscribeType = PacketType{
-	Name:     "UNSUBSCRIBE",
+	name:     "UNSUBSCRIBE",
 	packetId: 162,
+}
+
+func (up *UnsubscribePacket) Name() string {
+	return up.name
 }
 
 func (up *UnsubscribePacket) CreatePacket(topic string) {

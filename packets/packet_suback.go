@@ -13,8 +13,12 @@ type SubackPacket struct {
 }
 
 var subackType = PacketType{
-	Name:     "SUBACK",
+	name:     "SUBACK",
 	packetId: 144,
+}
+
+func (sa *SubackPacket) Name() string {
+	return sa.name
 }
 
 // CreatePacket creates a SubackPacket with hardcoded values for the message id and return codes

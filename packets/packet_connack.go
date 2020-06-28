@@ -13,8 +13,12 @@ type ConnackPacket struct {
 }
 
 var connackType = PacketType{
-	Name:     "CONNACK",
+	name:     "CONNACK",
 	packetId: 32,
+}
+
+func (c *ConnackPacket) Name() string {
+	return c.name
 }
 
 func (c *ConnackPacket) CreatePacket() {

@@ -15,9 +15,9 @@ func TestPublishPacket_Write(t *testing.T) {
 
 	err := pp.Write(&buf)
 	if err != nil {
-		t.Errorf("could not write %s packet %v", pp.Name, err)
+		t.Errorf("could not write %s packet %v", pp.name, err)
 	}
-	fmt.Printf("%s packet: %+v\n", pp.Name, pp)
+	fmt.Printf("%s packet: %+v\n", pp.name, pp)
 
 	packetType, err := decodeByte(&buf)
 	if err != nil {
@@ -27,7 +27,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	var ppRead PublishPacket
 	err = ppRead.Read(&buf)
 	if err != nil {
-		t.Errorf("could not read %s packet %v", pp.Name, err)
+		t.Errorf("could not read %s packet %v", pp.name, err)
 	}
 	topic := ppRead.Topic
 	if topic != testTopic {

@@ -14,8 +14,12 @@ type PublishPacket struct {
 }
 
 var publishType = PacketType{
-	Name:     "PUBLISH",
+	name:     "PUBLISH",
 	packetId: 48,
+}
+
+func (p *PublishPacket) Name() string {
+	return p.name
 }
 
 func (p *PublishPacket) CreatePacket(topic string, message string) {
