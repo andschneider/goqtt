@@ -11,12 +11,13 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/andschneider/goqtt"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -26,6 +27,9 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
+	// Set logger to pretty print instead of structured json
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+
 	// Set log level to debug if verbose is passed in
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if *verbose {
@@ -34,44 +38,39 @@ func main() {
 
 	conn, err := net.Dial("tcp", *server+":"+*port)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	defer conn.Close()
 
 	err = goqtt.SendConnect(conn)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
-
-	log.Printf("connected to %s:%s\n", *server, *port)
+	log.Info().Str("server", *server).Str("port", *port).Msg("connection successful")
 
 	err = goqtt.SendSubscribe(conn, *topic)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
-	log.Printf("subscribed to %s\n", *topic)
+	log.Info().Str("topic", *topic).Msg("subscribe successful")
 
 	sleep := 3 * time.Second
-	log.Printf("sleeping for %s\n", sleep)
+	log.Info().Msgf("sleeping for %s\n", sleep)
 	time.Sleep(sleep)
 
 	err = goqtt.SendUnsubscribe(conn, *topic)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
-	log.Printf("unsubscribed from %s\n", *topic)
+	log.Info().Str("topic", *topic).Msg("unsubscribe successful")
 
 	sleep = 3 * time.Second
-	log.Printf("sleeping for %s\n", sleep)
+	log.Info().Msgf("sleeping for %s\n", sleep)
 	time.Sleep(sleep)
 
-	log.Println("sending a disconnect request")
+	log.Info().Msg("sending a disconnect request")
 	err = goqtt.SendDisconnect(conn)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
 }

@@ -23,15 +23,17 @@ func readResponse(c net.Conn) (packets.Packet, error) {
 // sendPacket is a helper function to write a Packet to a TCP connection
 func sendPacket(c net.Conn, p packets.Packet) error {
 	log.Debug().
+		Str("source", "goqtt").
 		Str("packetType", p.Name()).
-		Str("packetString", p.String()).
+		Str("packet", p.String()).
 		Msg("sending packet")
 	err := p.Write(c)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("source", "goqtt").
 			Str("packetType", p.Name()).
-			Str("packetString", p.String()).
+			Str("packet", p.String()).
 			Msg("could not send packet")
 		return fmt.Errorf("could not send Packet to TCP connection: %v", err)
 	}
@@ -90,10 +92,7 @@ func SendConnect(c net.Conn) error {
 	// response
 	r, err := readResponse(c)
 	if rp, ok := r.(*packets.ConnackPacket); !ok {
-		log.Error().
-			Str("send", "CONNECT").
-			Str("receive", "CONNACK").
-			Msgf("received wrong packet %v", rp.String())
+		typeErrorResponseLogger(p.Name(), rp.Name(), rp)
 		return fmt.Errorf("did not receive a CONNACK packet, got %s instead", rp.Name())
 	}
 	return err
@@ -113,10 +112,7 @@ func SendSubscribe(c net.Conn, topic string) error {
 	// response
 	r, err := readResponse(c)
 	if rp, ok := r.(*packets.SubackPacket); !ok {
-		log.Error().
-			Str("send", "SUBSCRIBE").
-			Str("receive", "SUBACK").
-			Msgf("received wrong packet %v", rp.String())
+		typeErrorResponseLogger(p.Name(), rp.Name(), rp)
 		return fmt.Errorf("did not receive a SUBACK packet, got %s instead", rp.Name())
 	}
 	return err
@@ -136,13 +132,21 @@ func SendUnsubscribe(c net.Conn, topic string) error {
 	// response
 	r, err := readResponse(c)
 	if rp, ok := r.(*packets.UnsubackPacket); !ok {
-		log.Error().
-			Str("send", "UNSUBSCRIBE").
-			Str("receive", "UNSUBACK").
-			Msgf("received wrong packet %v", rp.String())
+		typeErrorResponseLogger(p.Name(), rp.Name(), rp)
 		return fmt.Errorf("did not receive an UNSUBACK packet, got %s instead", rp.Name())
 	}
 	return err
+}
+
+// typeErrorResponseLogger is a helper that logs relevant information when the wrong type
+// of packet is received from the TCP connection.
+func typeErrorResponseLogger(sendType, receiveType string, packet packets.Packet) {
+	log.Error().
+		Str("source", "goqtt").
+		Str("sentType", sendType).
+		Str("receivedType", receiveType).
+		Str("packet", packet.String()).
+		Msg("received wrong type of packet")
 }
 
 // SendDisconnect sends a DISCONNECT packet.
@@ -181,7 +185,6 @@ func SubscribeLoop(conn net.Conn) {
 	}()
 
 	for {
-		//log.Println("start loop")
 		p, err := packets.ReadPacket(conn)
 		// process packets based on type
 		switch packet := p.(type) {

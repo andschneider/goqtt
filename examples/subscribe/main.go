@@ -29,7 +29,7 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
-	// Set logger to pretty print instead of structure json
+	// Set logger to pretty print instead of structured json
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 
 	// Set log level to debug if verbose is passed in
