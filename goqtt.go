@@ -7,8 +7,15 @@ import (
 	"time"
 
 	"github.com/andschneider/goqtt/packets"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+func init() {
+	// disable logging by default. over ride by calling function again with a different log level, like below:
+	//zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	zerolog.SetGlobalLevel(zerolog.Disabled)
+}
 
 // readResponse is a helper function to the ReadPacket function which attempts to read
 // data from a TCP connection.
