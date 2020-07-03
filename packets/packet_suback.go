@@ -17,6 +17,10 @@ var subackType = PacketType{
 	packetId: 144,
 }
 
+func (sa *SubackPacket) Name() string {
+	return sa.name
+}
+
 // CreatePacket creates a SubackPacket with hardcoded values for the message id and return codes
 // The return codes should be expanded to return multiple values, as determined by the number of topics
 // subscribed to.

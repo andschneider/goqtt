@@ -16,6 +16,9 @@ var unsubackType = PacketType{
 	packetId: 176,
 }
 
+func (ua *UnsubackPacket) Name() string {
+	return ua.name
+}
 func (ua *UnsubackPacket) CreatePacket() {
 	ua.FixedHeader = FixedHeader{PacketType: unsubackType}
 	ua.MessageId = []byte{0, 1}

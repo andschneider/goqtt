@@ -18,6 +18,10 @@ var publishType = PacketType{
 	packetId: 48,
 }
 
+func (p *PublishPacket) Name() string {
+	return p.name
+}
+
 func (p *PublishPacket) CreatePacket(topic string, message string) {
 	p.FixedHeader = FixedHeader{PacketType: publishType}
 	p.Topic = topic

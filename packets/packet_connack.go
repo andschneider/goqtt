@@ -17,6 +17,10 @@ var connackType = PacketType{
 	packetId: 32,
 }
 
+func (c *ConnackPacket) Name() string {
+	return c.name
+}
+
 func (c *ConnackPacket) CreatePacket() {
 	c.FixedHeader = FixedHeader{PacketType: connackType, RemainingLength: 2}
 	// hardcode for a connect packet with connect flags of 00000010

@@ -14,11 +14,12 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net"
 	"os"
 
 	"github.com/andschneider/goqtt"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -28,6 +29,15 @@ func main() {
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
+	// Set logger to pretty print instead of structured json
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+
+	// Set log level to debug if verbose is passed in
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *verbose {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	if *server == "" || *port == "" || *topic == "" {
 		flag.Usage()
 		os.Exit(1)
@@ -35,24 +45,22 @@ func main() {
 
 	conn, err := net.Dial("tcp", *server+":"+*port)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	defer conn.Close()
 
-	err = goqtt.SendConnect(conn, *verbose)
+	err = goqtt.SendConnect(conn)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
-	log.Printf("connected to %s:%s\n", *server, *port)
+	log.Info().Str("server", *server).Str("port", *port).Msg("connection successful")
 
-	err = goqtt.SendSubscribe(conn, *topic, *verbose)
+	err = goqtt.SendSubscribe(conn, *topic)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal().Err(err)
 	}
-	log.Printf("subscribed to %s\n", *topic)
+	log.Info().Str("topic", *topic).Msg("subscribe successful")
 
 	// subscribe to topic and read messages
-	goqtt.SubscribeLoop(conn, *verbose)
+	goqtt.SubscribeLoop(conn)
 }

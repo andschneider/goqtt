@@ -10,6 +10,7 @@ import (
 const MQTT3 = 4 // 0000100 in binary
 
 type Packet interface {
+	Name() string
 	//CreatePacket()
 	String() string
 	Write(io.Writer) error

@@ -24,6 +24,10 @@ var connectType = PacketType{
 	packetId: 16,
 }
 
+func (c *ConnectPacket) Name() string {
+	return c.name
+}
+
 func (c *ConnectPacket) CreatePacket() {
 	c.FixedHeader = FixedHeader{PacketType: connectType}
 	c.ProtocolName = "MQTT"

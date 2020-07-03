@@ -38,3 +38,11 @@ If you would like to publish more messages you can use the following from a sepa
 ```bash
  docker run --net examples_goqtt examples_publish -server broker -port 1885 -message "hi"
 ```
+
+## Logging
+
+*WIP*
+
+`goqtt` uses [zerolog](https://github.com/rs/zerolog) internally for creating structured logs with different levels (such as DEBUG, INFO, and ERROR). 
+
+However, all log statements are **disabled** by default. If you'd like to enable the logging, set the global log level to the desired level. This is done with the `zerolog.SetGlobalLevel()` function and a parameter such as `zerolog.InfoLevel`. See the examples and their documentation for more levels.

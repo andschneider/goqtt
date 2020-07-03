@@ -18,6 +18,10 @@ var subscribeType = PacketType{
 	packetId: 130,
 }
 
+func (s *SubscribePacket) Name() string {
+	return s.name
+}
+
 func (s *SubscribePacket) CreatePacket(topic string) {
 	s.FixedHeader = FixedHeader{PacketType: subscribeType}
 	s.MessageId = []byte{0, 1}
