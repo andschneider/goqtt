@@ -25,6 +25,8 @@ See the `examples` folder. There are examples for:
 
 If you have Go installed you can run them with `go run ./examples/<example>`.
 
+If you don't have Go installed, the examples have been compiled to binaries for Linux (x86 and Arm) and Darwin (macOS). These can found in the [releases](https://github.com/andschneider/goqtt/releases) page. Download the correct .tar.gz for your platform and once uncompressed, the example binaries will be in an `examples` folder. These are CLIs and can be ran directly from your terminal. 
+
 Each example has a Dockerfile if you don't have Go installed (and have Docker installed). To build an image, run `docker build -t <image-name> .` from an example directory. For example, from the `examples/connect` directory run `docker build -t conngoqtt .`. 
 
 There is also a Docker Compose file which will spin up a broker, a subscriber, and a publisher. To run this, from the `examples` directory use:
