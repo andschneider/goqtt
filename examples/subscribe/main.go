@@ -73,5 +73,18 @@ func main() {
 	log.Info().Msg("subscription successful")
 
 	// Read messages indefinitely
-	client.SubscribeLoop()
+	//client.SubscribeLoop()
+	client.KeepAlive()
+	for {
+		m, err := client.ReadLoop()
+		if err != nil {
+			log.Error().Err(err)
+		}
+		if m != nil {
+			log.Info().
+				Str("TOPIC", m.Topic).
+				Str("DATA", string(m.Message)).
+				Msg("publish packet received")
+		}
+	}
 }

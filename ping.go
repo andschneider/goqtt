@@ -2,6 +2,7 @@ package goqtt
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/andschneider/goqtt/packets"
 	"github.com/rs/zerolog/log"
@@ -19,13 +20,42 @@ func (c *Client) SendPing() error {
 		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
 	}
 
-	// response
-	// why did i make this a goroutine?
+	// read response and verify it's a PINGRESP packet
+	//r, err := c.readResponse()
+	//if err != nil {
+	//	return fmt.Errorf("could not read response for %s: %v", p.Name(), err)
+	//}
+	//if _, ok := r.(*packets.PingRespPacket); !ok {
+	//	typeErrorResponseLogger(p.Name(), r.Name(), r)
+	//	return fmt.Errorf("did not receive an PINGRESP packet, got %s instead", r.Name())
+	//}
+	//if err != nil {
+	//	log.Error().Err(err).Str("source", "goqtt").Msg("could not read a PINGRESP packet")
+	//	return fmt.Errorf("could not read a PINGRESP packet")
+	//}
+	//}()
+	return nil
+}
+
+func (c *Client) KeepAlive() {
+	ticker := time.NewTicker(time.Duration(c.config.keepAlive) * time.Second)
 	go func() {
-		_, err := c.readResponse()
-		if err != nil {
-			log.Fatal().Err(err)
+		for {
+			select {
+			case <-c.disconnect:
+				log.Debug().
+					Str("source", "goqtt").
+					Msg("disconnecting in KeepAlive")
+				break
+			case <-ticker.C:
+				err := c.SendPing()
+				if err != nil {
+					log.Error().
+						Err(err).
+						Str("source", "goqtt").
+						Msg("could not send Ping in KeepAlive")
+				}
+			}
 		}
 	}()
-	return nil
 }

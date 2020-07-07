@@ -28,6 +28,9 @@ func NewClientConfig(clientId string, keepAlive int, broker string, topic string
 type Client struct {
 	config *ClientConfig
 	conn   net.Conn
+
+	disconnect chan bool
+	send       chan packets.Packet
 }
 
 // NewClient creates a new Client based on the configuration values in the ClientConfig struct
@@ -48,6 +51,10 @@ func (c *Client) Connect() error {
 		return fmt.Errorf("could not connect to server: %v", err)
 	}
 	c.conn = conn
+
+	c.disconnect = make(chan bool)
+	c.send = make(chan packets.Packet)
+	go c.temp()
 
 	// create Connect packet
 	var cp packets.ConnectPacket
@@ -73,6 +80,29 @@ func (c *Client) Connect() error {
 	return nil
 }
 
+func (c *Client) temp() {
+	log.Debug().Msg("UP HERE")
+	for {
+		p := <-c.send
+		log.Debug().Msg("IN HERE")
+		log.Info().
+			Str("source", "goqtt").
+			Str("packetType", p.Name()).
+			Str("packet", p.String()).
+			Msg("send packet")
+		err := p.Write(c.conn)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("source", "goqtt").
+				Str("packetType", p.Name()).
+				Str("packet", p.String()).
+				Msg("could not send packet")
+			//return fmt.Errorf("could not send Packet to TCP connection: %v", err)
+		}
+	}
+}
+
 // Disconnect sends a DISCONNECT packet.
 func (c *Client) Disconnect() error {
 	// create packet
@@ -84,6 +114,7 @@ func (c *Client) Disconnect() error {
 		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
 	}
 
+	c.disconnect <- true
 	return nil
 }
 

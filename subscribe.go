@@ -3,7 +3,6 @@ package goqtt
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -60,24 +59,29 @@ func (c *Client) Unsubscribe() error {
 // SubscribeLoop keeps a connection alive after a successful subscription to a topic and reads any incoming messages.
 // It sends pings based on the Keep Alive time to keep the connection from timing out.
 func (c *Client) SubscribeLoop() {
-	ticker := time.NewTicker(time.Duration(c.config.keepAlive) * time.Second)
-	// TODO add disconnect functionality
-	disconnect := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-disconnect:
-				return
-			case <-ticker.C:
-				err := c.SendPing()
-				if err != nil {
-					log.Fatal().Err(err)
-				}
-				//fmt.Println("would send a ping")
-			}
-		}
-	}()
+	//ticker := time.NewTicker(time.Duration(c.config.keepAlive) * time.Second)
+	//// TODO add disconnect functionality
+	//disconnect := make(chan bool)
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-disconnect:
+	//			return
+	//		case <-ticker.C:
+	//			err := c.SendPing()
+	//			if err != nil {
+	//				log.Fatal().Err(err)
+	//			}
+	//			//fmt.Println("would send a ping")
+	//		}
+	//	}
+	//}()
 
+	c.KeepAlive()
+	//err := c.KeepAlive()
+	//if err != nil {
+	//	log.Fatal().Err(err).Msg("could not keep connection alive")
+	//}
 	for {
 		p, err := packets.ReadPacket(c.conn)
 		// process packets based on type
@@ -97,4 +101,28 @@ func (c *Client) SubscribeLoop() {
 			return
 		}
 	}
+}
+
+func (c *Client) ReadLoop() (*packets.PublishPacket, error) {
+	p, err := packets.ReadPacket(c.conn)
+	if err != nil {
+		if err == io.EOF {
+			log.Warn().Msg("Looks like the server closed the connection...")
+			return nil, err
+		}
+		log.Fatal().Err(err).Msg("subscribe loop error")
+	}
+	// process packets based on type
+	switch packet := p.(type) {
+	case *packets.PublishPacket:
+		return packet, nil
+	case *packets.PingRespPacket:
+		// expected from the KeepAlive, all good
+		log.Debug().Str("source", "goqtt").Str("packet", packet.String()).Msg("pingresp received")
+		return nil, nil
+	default:
+		log.Warn().Str("packet", packet.String()).Msg("packet type unexpected")
+	}
+
+	return nil, nil
 }
