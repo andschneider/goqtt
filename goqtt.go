@@ -2,6 +2,8 @@ package goqtt
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/andschneider/goqtt/packets"
 	"github.com/rs/zerolog"
@@ -33,25 +35,20 @@ func (c *Client) readResponse() (packets.Packet, error) {
 	return p, nil
 }
 
-// sendPacket is a helper function to write a Packet to a TCP connection
-func (c *Client) sendPacket(p packets.Packet) error {
-	//log.Debug().
-	//	Str("source", "goqtt").
-	//	Str("packetType", p.Name()).
-	//	Str("packet", p.String()).
-	//	Msg("sending packet")
+// stagePacket is a helper function which just sends the packet to the client channel.
+// It will probable get removed or heavily modified.
+func (c *Client) stagePacket(p packets.Packet) int {
+	// create traceId for the packet, which is probably unnecessary.
+	rand.Seed(time.Now().UnixNano())
+	traceId := rand.Int()
+	log.Debug().
+		Str("source", "goqtt").
+		Str("packetType", p.Name()).
+		Str("packet", p.String()).
+		Int("traceId", traceId).
+		Msg("stage packet")
 	c.send <- p
-	//err := p.Write(c.conn)
-	//if err != nil {
-	//	log.Error().
-	//		Err(err).
-	//		Str("source", "goqtt").
-	//		Str("packetType", p.Name()).
-	//		Str("packet", p.String()).
-	//		Msg("could not send packet")
-	//	return fmt.Errorf("could not send Packet to TCP connection: %v", err)
-	//}
-	return nil
+	return traceId
 }
 
 // typeErrorResponseLogger is a helper that logs relevant information when the wrong type

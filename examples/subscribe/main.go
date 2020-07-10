@@ -73,9 +73,8 @@ func main() {
 	log.Info().Msg("subscription successful")
 
 	// Read messages indefinitely
-	//client.SubscribeLoop()
-	client.KeepAlive()
 	for {
+		log.Info().Msg("waiting for message") // will get called every Ping request
 		m, err := client.ReadLoop()
 		if err != nil {
 			log.Error().Err(err)

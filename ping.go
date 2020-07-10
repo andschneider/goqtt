@@ -1,7 +1,6 @@
 package goqtt
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/andschneider/goqtt/packets"
@@ -15,11 +14,7 @@ func (c *Client) SendPing() error {
 	var p packets.PingReqPacket
 	p.CreatePacket()
 
-	err := c.sendPacket(&p)
-	if err != nil {
-		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
-	}
-
+	c.stagePacket(&p)
 	// read response and verify it's a PINGRESP packet
 	//r, err := c.readResponse()
 	//if err != nil {

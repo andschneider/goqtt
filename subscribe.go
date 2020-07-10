@@ -16,10 +16,7 @@ func (c *Client) Subscribe() error {
 	var p packets.SubscribePacket
 	p.CreatePacket(c.config.topic)
 
-	err := c.sendPacket(&p)
-	if err != nil {
-		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
-	}
+	c.stagePacket(&p)
 
 	// read response and verify it's a SUBACK packet
 	r, err := c.readResponse()
@@ -30,6 +27,10 @@ func (c *Client) Subscribe() error {
 		typeErrorResponseLogger(p.Name(), r.Name(), r)
 		return fmt.Errorf("did not receive a SUBACK packet, got %s instead", r.Name())
 	}
+
+	// start a KeepAlive process which will send Ping packets to prevent a disconnect
+	// TODO I don't think this should be called in here - should be a background thing for a Client
+	c.KeepAlive()
 	return nil
 }
 
@@ -39,10 +40,7 @@ func (c *Client) Unsubscribe() error {
 	var p packets.UnsubscribePacket
 	p.CreatePacket(c.config.topic)
 
-	err := c.sendPacket(&p)
-	if err != nil {
-		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
-	}
+	c.stagePacket(&p)
 
 	// read response and verify it's a UNSUBACK packet
 	r, err := c.readResponse()
@@ -56,53 +54,10 @@ func (c *Client) Unsubscribe() error {
 	return err
 }
 
-// SubscribeLoop keeps a connection alive after a successful subscription to a topic and reads any incoming messages.
-// It sends pings based on the Keep Alive time to keep the connection from timing out.
-func (c *Client) SubscribeLoop() {
-	//ticker := time.NewTicker(time.Duration(c.config.keepAlive) * time.Second)
-	//// TODO add disconnect functionality
-	//disconnect := make(chan bool)
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-disconnect:
-	//			return
-	//		case <-ticker.C:
-	//			err := c.SendPing()
-	//			if err != nil {
-	//				log.Fatal().Err(err)
-	//			}
-	//			//fmt.Println("would send a ping")
-	//		}
-	//	}
-	//}()
+// TODO this is basically a wrapper around the ReadPacket function, and might get replaced/modified later.
 
-	c.KeepAlive()
-	//err := c.KeepAlive()
-	//if err != nil {
-	//	log.Fatal().Err(err).Msg("could not keep connection alive")
-	//}
-	for {
-		p, err := packets.ReadPacket(c.conn)
-		// process packets based on type
-		switch packet := p.(type) {
-		case *packets.PublishPacket:
-			log.Info().
-				Str("TOPIC", packet.Topic).
-				Str("DATA", string(packet.Message)).
-				Msg("publish packet received")
-		}
-		if err != nil {
-			if err == io.EOF {
-				log.Warn().Msg("Looks like the server closed the connection...")
-				break
-			}
-			log.Fatal().Err(err).Msg("subscribe loop error")
-			return
-		}
-	}
-}
-
+// ReadLoop should be used after a successful subscription to a topic and reads any incoming messages.
+// It returns a PublishPacket if one has been received for further processing.
 func (c *Client) ReadLoop() (*packets.PublishPacket, error) {
 	p, err := packets.ReadPacket(c.conn)
 	if err != nil {
@@ -110,7 +65,7 @@ func (c *Client) ReadLoop() (*packets.PublishPacket, error) {
 			log.Warn().Msg("Looks like the server closed the connection...")
 			return nil, err
 		}
-		log.Fatal().Err(err).Msg("subscribe loop error")
+		log.Error().Err(err).Msg("subscribe loop error")
 	}
 	// process packets based on type
 	switch packet := p.(type) {
@@ -121,8 +76,7 @@ func (c *Client) ReadLoop() (*packets.PublishPacket, error) {
 		log.Debug().Str("source", "goqtt").Str("packet", packet.String()).Msg("pingresp received")
 		return nil, nil
 	default:
-		log.Warn().Str("packet", packet.String()).Msg("packet type unexpected")
+		log.Warn().Str("source", "goqtt").Str("packet", packet.String()).Msg("packet type unexpected")
 	}
-
 	return nil, nil
 }

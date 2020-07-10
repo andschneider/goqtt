@@ -54,7 +54,7 @@ func (c *Client) Connect() error {
 
 	c.disconnect = make(chan bool)
 	c.send = make(chan packets.Packet)
-	go c.temp()
+	go c.sendPackets()
 
 	// create Connect packet
 	var cp packets.ConnectPacket
@@ -63,10 +63,7 @@ func (c *Client) Connect() error {
 	cp.ClientIdentifier = c.config.clientId
 
 	// send packet
-	err = c.sendPacket(&cp)
-	if err != nil {
-		return fmt.Errorf("could not send %s packet: %v", cp.Name(), err)
-	}
+	c.stagePacket(&cp)
 
 	// read response and verify it's a CONNACK packet
 	r, err := c.readResponse()
@@ -80,12 +77,11 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-func (c *Client) temp() {
-	log.Debug().Msg("UP HERE")
+// sendPacket handles all the packets sent through the client's channel and writes them to the TCP connection
+func (c *Client) sendPackets() {
 	for {
 		p := <-c.send
-		log.Debug().Msg("IN HERE")
-		log.Info().
+		log.Debug().
 			Str("source", "goqtt").
 			Str("packetType", p.Name()).
 			Str("packet", p.String()).
@@ -109,12 +105,9 @@ func (c *Client) Disconnect() error {
 	var p packets.DisconnectPacket
 	p.CreatePacket()
 
-	err := c.sendPacket(&p)
-	if err != nil {
-		return fmt.Errorf("could not send %s packet: %v", p.Name(), err)
-	}
+	c.stagePacket(&p)
 
-	c.disconnect <- true
+	//c.disconnect <- true
 	return nil
 }
 
