@@ -17,7 +17,8 @@ func init() {
 }
 
 // readResponse is a helper method to the ReadPacket function which attempts to read
-// data from a TCP connection.
+// data from a client's TCP connection. It basically wraps the ReadPacket with some
+// helpful logging messages.
 func (c *Client) readResponse() (packets.Packet, error) {
 	p, err := packets.ReadPacket(c.conn)
 	if err != nil {

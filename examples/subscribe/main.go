@@ -64,6 +64,7 @@ func main() {
 		log.Fatal().Err(err).Msg("could not connect to broker")
 	}
 	log.Info().Msg("connection successful")
+	defer client.Disconnect()
 
 	// Attempt to subscribe to the topic
 	err = client.Subscribe()

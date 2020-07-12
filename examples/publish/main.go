@@ -64,7 +64,7 @@ func main() {
 		log.Fatal().Err(err).Msg("could not connect to broker")
 	}
 	log.Info().Msg("connection successful")
-	defer client.Close()
+	defer client.Disconnect()
 
 	// create publish packet
 	err = client.SendPublish(message)

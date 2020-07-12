@@ -28,9 +28,9 @@ func (c *Client) Subscribe() error {
 		return fmt.Errorf("did not receive a SUBACK packet, got %s instead", r.Name())
 	}
 
-	// start a KeepAlive process which will send Ping packets to prevent a disconnect
+	// start a keepAlive process which will send Ping packets to prevent a disconnect
 	// TODO I don't think this should be called in here - should be a background thing for a Client
-	c.KeepAlive()
+	go c.keepAlive()
 	return nil
 }
 
@@ -72,7 +72,7 @@ func (c *Client) ReadLoop() (*packets.PublishPacket, error) {
 	case *packets.PublishPacket:
 		return packet, nil
 	case *packets.PingRespPacket:
-		// expected from the KeepAlive, all good
+		// expected from the keepAlive, all good
 		log.Debug().Str("source", "goqtt").Str("packet", packet.String()).Msg("pingresp received")
 		return nil, nil
 	default:

@@ -16,26 +16,46 @@ type ClientConfig struct {
 	topic     string
 }
 
-// NewClientConfig creates a ClientConfig struct and since none of the methods are exported, they
-// can't be changed after (this is on purpose)
+// NewClientConfig creates a ClientConfig struct which can't be edited after it's created.
 func NewClientConfig(clientId string, keepAlive int, broker string, topic string) *ClientConfig {
 	return &ClientConfig{clientId: clientId, keepAlive: keepAlive, broker: broker, topic: topic}
 }
 
 // Client is the main interaction point for sending and receiving Packets. Using the configuration
 // set in the ClientConfig struct, an instantiated Client needs to call the Connect() method
-// before sending/receiving any packets
+// before sending/receiving any packets.
 type Client struct {
 	config *ClientConfig
 	conn   net.Conn
 
-	disconnect chan bool
-	send       chan packets.Packet
+	send chan packets.Packet
 }
 
-// NewClient creates a new Client based on the configuration values in the ClientConfig struct
+// NewClient creates a new Client based on the configuration values in the ClientConfig struct.
 func NewClient(config *ClientConfig) *Client {
 	return &Client{config: config}
+}
+
+// TODO might combine these Get helpers
+
+// GetClientId returns the current ClientId for the client.
+func (c *Client) GetClientId() string {
+	return c.config.clientId
+}
+
+// GetKeepAlive returns the current KeepAlive for the client.
+func (c *Client) GetKeepAlive() int {
+	return c.config.keepAlive
+}
+
+// GetBroker returns the current Broker for the client.
+func (c *Client) GetBroker() string {
+	return c.config.broker
+}
+
+// GetTopic returns the current Topic for the client.
+func (c *Client) GetTopic() string {
+	return c.config.topic
 }
 
 // Connect attempts to create a TCP connection to the broker specified in the client's ClientConfig.
@@ -52,7 +72,6 @@ func (c *Client) Connect() error {
 	}
 	c.conn = conn
 
-	c.disconnect = make(chan bool)
 	c.send = make(chan packets.Packet)
 	go c.sendPackets()
 
@@ -94,27 +113,22 @@ func (c *Client) sendPackets() {
 				Str("packetType", p.Name()).
 				Str("packet", p.String()).
 				Msg("could not send packet")
-			//return fmt.Errorf("could not send Packet to TCP connection: %v", err)
 		}
 	}
 }
 
 // Disconnect sends a DISCONNECT packet.
-func (c *Client) Disconnect() error {
+func (c *Client) Disconnect() {
 	// create packet
 	var p packets.DisconnectPacket
 	p.CreatePacket()
 
-	c.stagePacket(&p)
-
-	//c.disconnect <- true
-	return nil
-}
-
-// Close closes the Client's TCP connection
-func (c *Client) Close() {
-	err := c.conn.Close()
+	err := p.Write(c.conn)
 	if err != nil {
-		fmt.Printf("could not close Client connection: %v", err)
+		log.Error().Err(err).Str("source", "goqtt").Msg("could not write Disconnect packet")
+	}
+	err = c.conn.Close()
+	if err != nil {
+		log.Error().Err(err).Str("source", "goqtt").Msg("could not close Client connection")
 	}
 }
