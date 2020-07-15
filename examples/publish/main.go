@@ -13,7 +13,7 @@ package main
 
 import (
 	"flag"
-	"net"
+	"fmt"
 	"os"
 
 	"github.com/andschneider/goqtt"
@@ -21,11 +21,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func main() {
+func config() (*goqtt.Client, string) {
 	server := flag.String("server", "mqtt.eclipse.org", "Server to connect to.")
 	port := flag.String("port", "1883", "Port of host.")
-	topic := flag.String("topic", "hello/world", "Topic(s) to subscribe to.")
+	topic := flag.String("topic", "goqtt", "Topic to subscribe/unsubscribe to.")
 	message := flag.String("message", "hello", "Message to send to topic.")
+	id := flag.String("id", "publish-example", "Client id. Default is 'publish-example' appended with the process id.")
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
@@ -38,22 +39,37 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	conn, err := net.Dial("tcp", *server+":"+*port)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer conn.Close()
+	// Create client
+	clientId := fmt.Sprintf("%s-%d", *id, os.Getpid())
+	keepAlive := 30 // seconds
+	broker := fmt.Sprintf("%s:%s", *server, *port)
+	log.Info().
+		Str("clientId", clientId).
+		Str("broker", broker).
+		Int("keepAlive", keepAlive).
+		Str("topic", *topic).
+		Msg("client configuration")
+	copts := goqtt.NewClientConfig(clientId, keepAlive, broker, *topic)
+	client := goqtt.NewClient(copts)
+	return client, *message
+}
 
-	err = goqtt.SendConnect(conn)
+func main() {
+	// parse command line args and create Client
+	client, message := config()
+
+	// Attempt a connection to the specified MQTT broker
+	err := client.Connect()
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not connect to broker")
 	}
-	log.Info().Str("server", *server).Str("port", *port).Msg("connection successful")
+	log.Info().Msg("connection successful")
+	defer client.Disconnect()
 
 	// create publish packet
-	err = goqtt.SendPublish(conn, *topic, *message)
+	err = client.SendPublish(message)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not send message")
 	}
-	log.Info().Str("TOPIC", *topic).Str("MESSAGE", *message).Msg("message sent successfully")
+	log.Info().Str("MESSAGE", message).Msg("message sent successfully")
 }

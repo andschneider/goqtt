@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+
+	"github.com/rs/zerolog/log"
 )
 
 const MQTT3 = 4 // 0000100 in binary
@@ -58,7 +60,10 @@ func ReadPacket(r io.Reader) (Packet, error) {
 	}
 
 	err = p.Read(r)
-	return p, err
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 // NewPacket creates an empty Packet according to the packetId parameter. The FixedHeader is set later in the packet's
@@ -85,8 +90,10 @@ func NewPacket(packetId byte) (Packet, error) {
 		return &UnsubackPacket{}, nil
 	case unsubscribeType.packetId:
 		return &UnsubscribePacket{}, nil
+	case 0:
+		log.Warn().Str("source", "goqtt").Str("packetId", string(packetId)).Msg("got a 0 packet")
 	}
-	return nil, fmt.Errorf("packet type not accounted for: %v\n", packetId)
+	return nil, fmt.Errorf("packet type not accounted for: %v", packetId)
 }
 
 func encodeLength(length int) []byte {

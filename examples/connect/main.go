@@ -11,7 +11,7 @@ package main
 
 import (
 	"flag"
-	"net"
+	"fmt"
 	"os"
 	"time"
 
@@ -20,10 +20,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func main() {
+func config() *goqtt.Client {
 	server := flag.String("server", "mqtt.eclipse.org", "Server to connect to.")
 	port := flag.String("port", "1883", "Port of host.")
-	topic := flag.String("topic", "hello/world", "Topic to subscribe/unsubscribe to.")
+	topic := flag.String("topic", "goqtt", "Topic to subscribe/unsubscribe to.")
+	id := flag.String("id", "connect-example", "Client id. Default is 'connect-example' appended with the process id.")
 	verbose := flag.Bool("v", false, "Verbose output. Default is false.")
 	flag.Parse()
 
@@ -36,41 +37,55 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	conn, err := net.Dial("tcp", *server+":"+*port)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	defer conn.Close()
+	// Create client
+	clientId := fmt.Sprintf("%s-%d", *id, os.Getpid())
+	keepAlive := 60 // seconds
+	broker := fmt.Sprintf("%s:%s", *server, *port)
+	log.Info().
+		Str("clientId", clientId).
+		Str("broker", broker).
+		Int("keepAlive", keepAlive).
+		Str("topic", *topic).
+		Msg("client configuration")
+	copts := goqtt.NewClientConfig(clientId, keepAlive, broker, *topic)
+	client := goqtt.NewClient(copts)
+	return client
+}
 
-	err = goqtt.SendConnect(conn)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	log.Info().Str("server", *server).Str("port", *port).Msg("connection successful")
-
-	err = goqtt.SendSubscribe(conn, *topic)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
-	log.Info().Str("topic", *topic).Msg("subscribe successful")
-
+func sleeper() {
 	sleep := 3 * time.Second
-	log.Info().Msgf("sleeping for %s\n", sleep)
+	log.Debug().Msgf("sleeping for %s", sleep)
 	time.Sleep(sleep)
+}
 
-	err = goqtt.SendUnsubscribe(conn, *topic)
+func main() {
+	// parse command line args and create Client
+	client := config()
+
+	// Attempt a connection to the specified MQTT broker
+	err := client.Connect()
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("could not connect to broker")
 	}
-	log.Info().Str("topic", *topic).Msg("unsubscribe successful")
+	log.Info().Msg("connection successful")
 
-	sleep = 3 * time.Second
-	log.Info().Msgf("sleeping for %s\n", sleep)
-	time.Sleep(sleep)
+	// Attempt to subscribe to the topic
+	err = client.Subscribe()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not subscribe to topic")
+	}
+	log.Info().Msg("subscription successful")
+	sleeper()
 
+	// Attempt to unsubscribe to the topic
+	err = client.Unsubscribe()
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not unsubscribe from topic")
+	}
+	log.Info().Msg("unsubscribe successful")
+	sleeper()
+
+	// Send a disconnect notification
 	log.Info().Msg("sending a disconnect request")
-	err = goqtt.SendDisconnect(conn)
-	if err != nil {
-		log.Fatal().Err(err)
-	}
+	client.Disconnect()
 }

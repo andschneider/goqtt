@@ -8,15 +8,53 @@
 
 ## Install
 
-First, install [Go](https://golang.org/doc/install).
-
-Next use go modules to download this package:
+Using go `1.13` or higher, install using go modules:
 
 `go get github.com/andschneider/goqtt`
 
 ## Usage
 
-See the `examples` folder. There are examples for:
+### subscription
+
+Below is a simple example showing a subscription to a specified topic. Any Publish message received on the topic will be returned, allowing for further processing if desired. *Note: there is no error handling in the example, which is not advised.*
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/andschneider/goqtt"
+)
+
+func main() {
+	// Create Client
+	clientId := "simple"
+	keepAlive := 30 // seconds
+	broker := "mqtt.eclipse.org:1883"
+	topic := "goqtt"
+
+	client := goqtt.NewClient(goqtt.NewClientConfig(clientId, keepAlive, broker, topic))
+
+	// Attempt a connection to the specified MQTT broker
+	client.Connect()
+	defer client.Disconnect()
+
+	// Attempt to subscribe to the topic
+	client.Subscribe()
+
+	// Read messages indefinitely
+	for {
+		log.Println("waiting for message")
+		m, _ := client.ReadLoop()
+		if m != nil {
+			log.Printf("received message: '%s' from topic: '%s'", string(m.Message), m.Topic)
+		}
+	}
+}
+```
+
+There are more example in the `examples` folder. You can find CLIs to do the following:
 
 - simple connect and disconnect to a broker
 - publishing a message a topic
