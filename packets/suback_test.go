@@ -6,25 +6,16 @@ import (
 	"testing"
 )
 
-var testSubackPacket = []byte{3, 0, 1, 0}
-
-func TestSubackPacket(t *testing.T) {
-	suback := bytes.NewBuffer(testSubackPacket)
-
-	sa := SubackPacket{}
-	err := sa.Read(suback)
-	if err != nil {
-		t.Errorf("could not read suback packet: %v\n", err)
-	}
-	fmt.Printf("%s packet: %+v\n", sa.name, sa)
-}
-
 func TestSubackPacket_Write(t *testing.T) {
 	var buf bytes.Buffer
 	var saRead, saWrite SubackPacket
 	suback := bytes.NewBuffer(testSubackPacket)
 
-	err := saRead.Read(suback)
+	_, err := decodeByte(suback)
+	if err != nil {
+		t.Errorf("could not decode packet id: %v", err)
+	}
+	err = saRead.Read(suback)
 	if err != nil {
 		t.Errorf("could not read %s packet: %v\n", saRead.name, err)
 	}

@@ -6,17 +6,6 @@ import (
 	"testing"
 )
 
-func TestDisconnectPacket_Read(t *testing.T) {
-	var d DisconnectPacket
-	disconnect := bytes.NewBuffer([]byte{0})
-
-	err := d.Read(disconnect)
-	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", d.name, err)
-	}
-	fmt.Printf("read %s packet: %+v\n", d.name, d)
-}
-
 func TestDisconnectPacket_Write(t *testing.T) {
 	var buf bytes.Buffer
 	var d DisconnectPacket

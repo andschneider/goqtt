@@ -12,18 +12,6 @@ const (
 	returnCode      = 0
 )
 
-// Test reading in a connack packet
-func TestConnackPacket_Read(t *testing.T) {
-	var ca ConnackPacket
-	connack := bytes.NewBuffer(testConnackPacket)
-
-	err := ca.Read(connack)
-	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", ca.Name(), err)
-	}
-	fmt.Printf("%s packet: %+v\n", ca.Name(), ca)
-}
-
 // Test writing a packet to a buffer
 func TestConnackPacket_Write(t *testing.T) {
 	var buf bytes.Buffer

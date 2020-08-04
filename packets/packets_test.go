@@ -52,7 +52,16 @@ func TestNewPacket(t *testing.T) {
 	}
 }
 
-var testConnackPacket = []byte{connackType.packetId, byte(remainingLength), byte(sessionPresent), byte(returnCode)}
+var (
+	testConnackPacket    = []byte{connackType.packetId, byte(remainingLength), byte(sessionPresent), byte(returnCode)}
+	testDisconnectPacket = []byte{disconnectType.packetId, 0}
+	testPingReqPacket    = []byte{pingReqType.packetId, 0}
+	testPingRespPacket   = []byte{pingRespType.packetId, 0}
+	testSubackPacket     = []byte{subackType.packetId, 3, 0, 1, byte(returnCode)}
+	testUnsubackPacket   = []byte{unsubackType.packetId, 2, 0, 1}
+	//testUnsubscribePacket = []byte{unsubscribeType.packetId, 14, 0, 1, 0, 10, 116, 101, 115, 116, 47, 116, 111, 112, 105, 99}
+	testUnsubscribePacket = append([]byte{unsubscribeType.packetId, 14, 0, 1, 0}, []byte("\ntest/topic")...)
+)
 
 func TestReadPacket(t *testing.T) {
 	testCases := []struct {
@@ -62,6 +71,27 @@ func TestReadPacket(t *testing.T) {
 	}{
 		{"connack", testConnackPacket, &ConnackPacket{
 			FixedHeader: FixedHeader{connackType, remainingLength},
+		}},
+		{"disconnect", testDisconnectPacket, &DisconnectPacket{
+			FixedHeader: FixedHeader{disconnectType, 0},
+		}},
+		{"pingreq", testPingReqPacket, &PingReqPacket{
+			FixedHeader: FixedHeader{pingReqType, 0},
+		}},
+		{"pingresp", testPingRespPacket, &PingRespPacket{
+			FixedHeader: FixedHeader{pingRespType, 0},
+		}},
+		{"suback", testSubackPacket, &SubackPacket{
+			FixedHeader: FixedHeader{subackType, 3},
+			MessageId:   []byte{0, 1}, ReturnCodes: []byte{0},
+		}},
+		{"unsuback", testUnsubackPacket, &UnsubackPacket{
+			FixedHeader: FixedHeader{unsubackType, 2},
+			MessageId:   []byte{0, 1},
+		}},
+		{"unsubscribe", testUnsubscribePacket, &UnsubscribePacket{
+			FixedHeader: FixedHeader{unsubscribeType, 14},
+			MessageId:   []byte{0, 1}, Topics: []string{testTopic},
 		}},
 	}
 
