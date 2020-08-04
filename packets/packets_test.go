@@ -2,7 +2,7 @@ package packets
 
 import (
 	"bytes"
-	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -21,29 +21,60 @@ func TestFixedHeader(t *testing.T) {
 	}
 }
 
-// Adds the packetId to the packet
-var testFullConnackPacket = []byte{byte(32), byte(remainingLength), byte(sessionPresent), byte(returnCode)}
-
-func TestReaderWithConnack(t *testing.T) {
-	connack := bytes.NewBuffer(testConnackPacket)
-
-	// read packet using the Read method directly
-	var ca ConnackPacket
-	err := ca.Read(connack)
-	if err != nil {
-		t.Errorf("could not read %s packet: %v\n", ca.Name(), err)
+func TestNewPacket(t *testing.T) {
+	testCases := []struct {
+		name     string
+		packetId byte
+		want     Packet
+	}{
+		{"connack", connackType.packetId, &ConnackPacket{}},
+		{"connect", connectType.packetId, &ConnectPacket{}},
+		{"disconnect", disconnectType.packetId, &DisconnectPacket{}},
+		{"pingReq", pingReqType.packetId, &PingReqPacket{}},
+		{"pingResp", pingRespType.packetId, &PingRespPacket{}},
+		{"publish", publishType.packetId, &PublishPacket{}},
+		{"suback", subackType.packetId, &SubackPacket{}},
+		{"subscribe", subscribeType.packetId, &SubscribePacket{}},
+		{"unsuback", unsubackType.packetId, &UnsubackPacket{}},
+		{"unsubscribe", unsubscribeType.packetId, &UnsubscribePacket{}},
 	}
 
-	// Use the ReadPacket functon to return a Packet interface
-	c2 := bytes.NewBuffer(testFullConnackPacket)
-	p, err := ReadPacket(c2)
-	if err != nil {
-		t.Errorf("could not use ReadPacke: %v\n", err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := NewPacket(tc.packetId)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected %s, got %v", tc.want, got)
+			}
+		})
 	}
-	caNew := p.(*ConnackPacket)
-	fmt.Printf("packet type is: %T\n", caNew)
+}
 
-	if *caNew != ca {
-		t.Errorf("packets don't match:\n%+v\n%+v", *caNew, ca)
+var testConnackPacket = []byte{connackType.packetId, byte(remainingLength), byte(sessionPresent), byte(returnCode)}
+
+func TestReadPacket(t *testing.T) {
+	testCases := []struct {
+		name   string
+		packet []byte
+		want   Packet
+	}{
+		{"connack", testConnackPacket, &ConnackPacket{
+			FixedHeader: FixedHeader{connackType, remainingLength},
+		}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := bytes.NewReader(tc.packet)
+			got, err := ReadPacket(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(tc.want, got) {
+				t.Fatalf("expected %s, got %v", tc.want, got)
+			}
+		})
 	}
 }

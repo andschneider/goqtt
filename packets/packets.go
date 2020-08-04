@@ -1,3 +1,5 @@
+// Package packets make up the MQTT control packets and
+// their core functionality.
 package packets
 
 import (
@@ -11,21 +13,23 @@ import (
 
 const MQTT3 = 4 // 0000100 in binary
 
+// Packet is the interface for working with MQTT packets.
 type Packet interface {
 	Name() string
-	//CreatePacket()
 	String() string
 	Write(io.Writer) error
 	Read(io.Reader) error
 }
 
-// PacketType represents the human readable name and the byte representation of the first byte of the packet header
+// PacketType represents the human readable name and the
+// byte representation of the first byte of the packet header.
 type PacketType struct {
 	name     string
 	packetId byte
 }
 
-// FixedHeader represents the packet type and the length of the remaining payload in the packet
+// FixedHeader represents the packet type and the length of the
+// remaining payload in the packet.
 type FixedHeader struct {
 	PacketType
 	RemainingLength int
@@ -35,13 +39,16 @@ func (fh *FixedHeader) String() string {
 	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.name, fh.RemainingLength)
 }
 
+// WriteHeader writes the FixedHeader to a buffer.
+// It is called in a packet's Write method.
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 	header.WriteByte(fh.PacketType.packetId)
 	header.Write(encodeLength(fh.RemainingLength))
 	return
 }
 
-// Assumes the message type byte has already been read
+// read assumes the message type byte has already been read from the io.Reader.
+// This gets called inside each packets Read method.
 func (fh *FixedHeader) read(r io.Reader) (err error) {
 	fh.RemainingLength, err = decodeLength(r)
 	return err
@@ -66,8 +73,7 @@ func ReadPacket(r io.Reader) (Packet, error) {
 	return p, nil
 }
 
-// NewPacket creates an empty Packet according to the packetId parameter. The FixedHeader is set later in the packet's
-// Read method
+// NewPacket creates an empty Packet according to the packetId parameter.
 func NewPacket(packetId byte) (Packet, error) {
 	switch packetId {
 	case connackType.packetId:
