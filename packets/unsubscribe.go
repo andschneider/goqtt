@@ -17,10 +17,13 @@ var unsubscribeType = PacketType{
 	packetId: 162,
 }
 
+// Name returns the packet type name.
 func (up *UnsubscribePacket) Name() string {
 	return up.name
 }
 
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
 func (up *UnsubscribePacket) CreatePacket(topic string) {
 	up.FixedHeader = FixedHeader{PacketType: unsubscribeType}
 	up.MessageId = []byte{0, 1}
@@ -31,6 +34,8 @@ func (up *UnsubscribePacket) String() string {
 	return fmt.Sprintf("%v messageid: %b topics %s", up.FixedHeader, up.MessageId, up.Topics)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (up *UnsubscribePacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -48,6 +53,8 @@ func (up *UnsubscribePacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (up *UnsubscribePacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = unsubscribeType

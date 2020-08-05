@@ -18,10 +18,13 @@ var subscribeType = PacketType{
 	packetId: 130,
 }
 
+// Name returns the packet type name.
 func (s *SubscribePacket) Name() string {
 	return s.name
 }
 
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
 func (s *SubscribePacket) CreatePacket(topic string) {
 	s.FixedHeader = FixedHeader{PacketType: subscribeType}
 	s.MessageId = []byte{0, 1}
@@ -33,6 +36,8 @@ func (s *SubscribePacket) String() string {
 	return fmt.Sprintf("%v messageid: %v topics: %s", s.FixedHeader, s.MessageId, s.Topics)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (s *SubscribePacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -51,6 +56,8 @@ func (s *SubscribePacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (s *SubscribePacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = subscribeType

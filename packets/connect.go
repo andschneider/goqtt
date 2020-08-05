@@ -24,10 +24,13 @@ var connectType = PacketType{
 	packetId: 16,
 }
 
+// Name returns the packet type name.
 func (c *ConnectPacket) Name() string {
 	return c.name
 }
 
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
 func (c *ConnectPacket) CreatePacket() {
 	c.FixedHeader = FixedHeader{PacketType: connectType}
 	c.ProtocolName = "MQTT"
@@ -42,6 +45,8 @@ func (c *ConnectPacket) String() string {
 	return fmt.Sprintf("%v protocolname: %v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolName, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (c *ConnectPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -60,6 +65,8 @@ func (c *ConnectPacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (c *ConnectPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = connectType
