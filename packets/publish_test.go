@@ -11,7 +11,7 @@ func TestPublishPacket_Write(t *testing.T) {
 	var pp PublishPacket
 
 	message := "hello world"
-	pp.CreatePacket(testTopic, message)
+	pp.CreatePublishPacket(testTopic, message)
 
 	err := pp.Write(&buf)
 	if err != nil {

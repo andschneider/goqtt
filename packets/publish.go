@@ -23,13 +23,18 @@ func (p *PublishPacket) Name() string {
 	return p.name
 }
 
+// CreatePublishPacket wraps CreatePacket and adds a topic and a message.
+func (p *PublishPacket) CreatePublishPacket(topic, message string) {
+	p.CreatePacket()
+	p.Topic = topic
+	p.Message = []byte(message)
+}
+
 // CreatePacket creates a new packet with the appropriate FixedHeader.
 // It sets default values where needed as well.
-func (p *PublishPacket) CreatePacket(topic string, message string) {
+func (p *PublishPacket) CreatePacket() {
 	p.FixedHeader = FixedHeader{PacketType: publishType}
-	p.Topic = topic
 	p.MessageId = []byte{0, 1}
-	p.Message = []byte(message)
 }
 
 func (p *PublishPacket) String() string {

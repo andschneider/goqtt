@@ -23,12 +23,17 @@ func (s *SubscribePacket) Name() string {
 	return s.name
 }
 
+// CreateSubscribePacket wraps CreatePacket and adds a topic.
+func (s *SubscribePacket) CreateSubscribePacket(topic string) {
+	s.CreatePacket()
+	s.Topics = []string{topic}
+}
+
 // CreatePacket creates a new packet with the appropriate FixedHeader.
 // It sets default values where needed as well.
-func (s *SubscribePacket) CreatePacket(topic string) {
+func (s *SubscribePacket) CreatePacket() {
 	s.FixedHeader = FixedHeader{PacketType: subscribeType}
 	s.MessageId = []byte{0, 1}
-	s.Topics = []string{topic}
 	s.Qos = []byte{0}
 }
 

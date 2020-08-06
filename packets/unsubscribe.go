@@ -22,12 +22,17 @@ func (up *UnsubscribePacket) Name() string {
 	return up.name
 }
 
+// CreateUnsubscribePacket wraps CreatePacket and adds a topic.
+func (up *UnsubscribePacket) CreateUnsubscribePacket(topic string) {
+	up.CreatePacket()
+	up.Topics = []string{topic}
+}
+
 // CreatePacket creates a new packet with the appropriate FixedHeader.
 // It sets default values where needed as well.
-func (up *UnsubscribePacket) CreatePacket(topic string) {
+func (up *UnsubscribePacket) CreatePacket() {
 	up.FixedHeader = FixedHeader{PacketType: unsubscribeType}
 	up.MessageId = []byte{0, 1}
-	up.Topics = []string{topic}
 }
 
 func (up *UnsubscribePacket) String() string {

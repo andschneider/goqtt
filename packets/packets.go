@@ -16,6 +16,7 @@ const MQTT3 = 4 // 0000100 in binary
 // Packet is the interface for working with MQTT packets.
 type Packet interface {
 	Name() string
+	CreatePacket()
 	String() string
 	Write(io.Writer) error
 	Read(io.Reader) error

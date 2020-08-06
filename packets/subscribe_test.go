@@ -10,7 +10,7 @@ func TestSubscribePacket(t *testing.T) {
 	var buf bytes.Buffer
 	var spWrite, spRead SubscribePacket
 
-	spWrite.CreatePacket(testTopic)
+	spWrite.CreateSubscribePacket(testTopic)
 	err := spWrite.Write(&buf)
 	if err != nil {
 		t.Errorf("could not write %s packet: %v", spWrite.name, err)

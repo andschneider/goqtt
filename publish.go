@@ -10,7 +10,7 @@ import (
 func (c *Client) SendPublish(message string) error {
 	// create packet
 	var p packets.PublishPacket
-	p.CreatePacket(c.config.topic, message)
+	p.CreatePublishPacket(c.config.topic, message)
 
 	// TODO review this
 	// Write directly to connection instead of sending packet to client's connection channel to avoid
