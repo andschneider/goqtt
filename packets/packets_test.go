@@ -52,6 +52,13 @@ func TestNewPacket(t *testing.T) {
 	}
 }
 
+// TODO remove or make more specific to packets
+const (
+	remainingLength = 2
+	sessionPresent  = 0
+	returnCode      = 0
+)
+
 var (
 	testConnackPacket    = []byte{connackType.packetId, byte(remainingLength), byte(sessionPresent), byte(returnCode)}
 	testDisconnectPacket = []byte{disconnectType.packetId, 0}
@@ -63,6 +70,8 @@ var (
 	testUnsubscribePacket = append([]byte{unsubscribeType.packetId, 14, 0, 1, 0}, []byte("\ntest/topic")...)
 )
 
+// TODO add connect, publish, and subscribe packets
+// Test reading in packets.
 func TestReadPacket(t *testing.T) {
 	testCases := []struct {
 		name   string
@@ -104,6 +113,62 @@ func TestReadPacket(t *testing.T) {
 			}
 			if !reflect.DeepEqual(tc.want, got) {
 				t.Fatalf("expected %s, got %v", tc.want, got)
+			}
+		})
+	}
+}
+
+// TODO connect packet
+// Test the default values set by CreatePacket methods.
+func TestCreatePacket(t *testing.T) {
+	testCases := []struct {
+		name   string
+		packet Packet
+		want   Packet
+	}{
+		{"connack", &ConnackPacket{}, &ConnackPacket{
+			FixedHeader: FixedHeader{connackType, remainingLength},
+		}},
+		//{"connect", &ConnectPacket{}, &ConnectPacket{
+		//	FixedHeader: FixedHeader{connectType,20},
+		//}},
+		{"disconnect", &DisconnectPacket{}, &DisconnectPacket{
+			FixedHeader: FixedHeader{disconnectType, 0},
+		}},
+		{"pingreq", &PingReqPacket{}, &PingReqPacket{
+			FixedHeader: FixedHeader{pingReqType, 0},
+		}},
+		{"pingresp", &PingRespPacket{}, &PingRespPacket{
+			FixedHeader: FixedHeader{pingRespType, 0},
+		}},
+		{"publish", &PublishPacket{}, &PublishPacket{
+			FixedHeader: FixedHeader{publishType, 2},
+			MessageId:   []byte{0, 1},
+		}},
+		{"suback", &SubackPacket{}, &SubackPacket{
+			FixedHeader: FixedHeader{subackType, 3},
+			MessageId:   []byte{0, 1}, ReturnCodes: []byte{0},
+		}},
+		{"unsuback", &UnsubackPacket{}, &UnsubackPacket{
+			FixedHeader: FixedHeader{unsubackType, 2},
+			MessageId:   []byte{0, 1},
+		}},
+		{"unsubscribe", &UnsubscribePacket{}, &UnsubscribePacket{
+			FixedHeader: FixedHeader{unsubscribeType, 2},
+			MessageId:   []byte{0, 1},
+		}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			tc.packet.CreatePacket()
+			err := tc.packet.Write(&buf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(tc.want, tc.packet) {
+				t.Fatalf("expected %s, got %v", tc.want, tc.packet)
 			}
 		})
 	}

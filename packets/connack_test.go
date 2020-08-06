@@ -6,13 +6,6 @@ import (
 	"testing"
 )
 
-const (
-	remainingLength = 2
-	sessionPresent  = 0
-	returnCode      = 0
-)
-
-// Test writing a packet to a buffer
 func TestConnackPacket_Write(t *testing.T) {
 	var buf bytes.Buffer
 	var ca ConnackPacket
