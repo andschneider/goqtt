@@ -32,7 +32,7 @@ import (
 
 func main() {
 	// Create Client
-	clientId := "simple"
+	clientId := "simple-sub"
 	keepAlive := 30 // seconds
 	broker := "mqtt.eclipse.org:1883"
 	topic := "goqtt"
@@ -59,16 +59,46 @@ func main() {
 
 ### publish
 
-*TODO*
+Below is a simple example showing how to Publish a message to a specified topic. *Note: there is no error handling in the example, which is not advised.*
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/andschneider/goqtt"
+)
+
+func main() {
+	// Create Client
+	clientId := "simple-pub"
+	keepAlive := 30 // seconds
+	broker := "mqtt.eclipse.org:1883"
+	topic := "goqtt"
+
+	client := goqtt.NewClient(goqtt.NewClientConfig(clientId, keepAlive, broker, topic))
+
+	// Attempt a connection to the specified MQTT broker
+	client.Connect()
+	defer client.Disconnect()
+
+	// Attempt to publish a message
+	err := client.SendPublish("hello world")
+	if err != nil {
+		fmt.Printf("could not send message: %v\n", err)
+	}
+}
+```
+
 
 ### more 
 
-There are more example in the `examples` folder. You can find CLIs to do the following:
+There are more examples in the `examples` folder. You can find CLIs to do the following:
 
 - simple connect and disconnect to a broker
 - publishing a message a topic
 - subscribing to a topic
-- a minimal broker
 
 If you have Go installed you can run them with `go run ./examples/<example>`.
 
