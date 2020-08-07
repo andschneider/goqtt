@@ -94,29 +94,25 @@ func main() {
 
 ### more 
 
-There are more examples in the `examples` folder. You can find CLIs to do the following:
+There are more examples in the `examples` folder, with proper error handling and some logging:
 
-- simple connect and disconnect to a broker
+- connect and disconnect to a broker
 - publishing a message a topic
 - subscribing to a topic
 
+#### Go
+
 If you have Go installed you can run them with `go run ./examples/<example>`.
 
-If you don't have Go installed, the examples have been compiled to binaries for Linux (x86 and Arm) and Darwin (macOS). These can found in the [releases](https://github.com/andschneider/goqtt/releases) page. Download the correct .tar.gz for your platform and once uncompressed, the example binaries will be in an `examples` folder. These are CLIs and can be ran directly from your terminal. 
+#### CLI
 
-Each example has a Dockerfile if you don't have Go installed (and have Docker installed). To build an image, run `docker build -t <image-name> .` from an example directory. For example, from the `examples/connect` directory run `docker build -t conngoqtt .`. 
+If you don't have Go installed, the examples have been compiled to binaries for Linux (x86 and Arm) and Darwin (macOS). These can found in the [releases](https://github.com/andschneider/goqtt/releases) page. Download the correct .tar.gz for your platform and once uncompressed, the binaries will be in an `examples` folder. These are CLIs and can be ran directly from your terminal. 
 
-There is also a Docker Compose file which will spin up a broker, a subscriber, and a publisher. To run this, from the `examples` directory use:
+#### Docker
 
-```bash
-docker-compose up --build
-```
+Each example has a Dockerfile if you don't have Go installed (and have Docker installed). To build an image, run `docker build -t <image-name> .` from an example directory. 
 
-If you would like to publish more messages you can use the following from a separate terminal:
-
-```bash
- docker run --net examples_goqtt examples_publish -server broker -port 1885 -message "hi"
-```
+For example, from the `examples/connect` directory run `docker build -t conngoqtt .`. Then to use the container, run `docker run conngoqtt`.
 
 ## Limitations
 
@@ -149,3 +145,7 @@ A more minor omission is the lack of support for multiple topic subscriptions or
 goqtt uses [zerolog](https://github.com/rs/zerolog) internally for creating structured logs with different levels (such as DEBUG, INFO, and ERROR). 
 
 However, all log statements are **disabled** by default. If you'd like to enable the logging, set the global log level to the desired level. This is done with the `zerolog.SetGlobalLevel()` function and a parameter such as `zerolog.InfoLevel`. See the examples and their documentation for more levels.
+
+## Inspiration
+
+The [eclipse paho golang](https://github.com/eclipse/paho.mqtt.golang) MQTT library has been a large inspiration and resource for this project. Much thanks to them.
