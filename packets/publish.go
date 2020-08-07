@@ -34,7 +34,7 @@ func (p *PublishPacket) CreatePublishPacket(topic, message string) {
 // It sets default values where needed as well.
 func (p *PublishPacket) CreatePacket() {
 	p.FixedHeader = FixedHeader{PacketType: publishType}
-	p.MessageId = []byte{0, 1}
+	p.MessageId = defaultMessageId
 }
 
 func (p *PublishPacket) String() string {

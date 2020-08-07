@@ -26,7 +26,7 @@ func (sa *SubackPacket) Name() string {
 // It sets default values where needed as well.
 func (sa *SubackPacket) CreatePacket() {
 	sa.FixedHeader = FixedHeader{PacketType: subackType}
-	sa.MessageId = []byte{0, 1}
+	sa.MessageId = defaultMessageId
 	// TODO expand to more than one topic
 	sa.ReturnCodes = []byte{0}
 }

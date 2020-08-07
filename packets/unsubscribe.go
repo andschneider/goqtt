@@ -32,7 +32,7 @@ func (up *UnsubscribePacket) CreateUnsubscribePacket(topic string) {
 // It sets default values where needed as well.
 func (up *UnsubscribePacket) CreatePacket() {
 	up.FixedHeader = FixedHeader{PacketType: unsubscribeType}
-	up.MessageId = []byte{0, 1}
+	up.MessageId = defaultMessageId
 }
 
 func (up *UnsubscribePacket) String() string {

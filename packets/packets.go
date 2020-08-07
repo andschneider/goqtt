@@ -13,6 +13,11 @@ import (
 
 const MQTT3 = 4 // 0000100 in binary
 
+var (
+	defaultKeepAlive = encodeUint16(60)
+	defaultMessageId = encodeUint16(1)
+)
+
 // Packet is the interface for working with MQTT packets.
 type Packet interface {
 	Name() string
@@ -120,23 +125,29 @@ func encodeLength(length int) []byte {
 }
 
 func decodeLength(r io.Reader) (int, error) {
-	var rLength uint32
-	var multiplier uint32
+	var multiplier uint32 = 1
+	var value uint32
 	b := make([]byte, 1)
-	for multiplier < 27 { //fix: Infinite '(digit & 128) == 1' will cause the dead loop
+	for {
 		_, err := io.ReadFull(r, b)
 		if err != nil {
 			return 0, err
 		}
-
 		digit := b[0]
-		rLength |= uint32(digit&127) << multiplier
+
+		value += uint32(digit&127) * multiplier
 		if (digit & 128) == 0 {
 			break
 		}
-		multiplier += 7
+		multiplier *= 128
 	}
-	return int(rLength), nil
+	return int(value), nil
+}
+
+func encodeUint16(i uint8) []byte {
+	e := make([]byte, 2)
+	binary.BigEndian.PutUint16(e, uint16(i))
+	return e
 }
 
 func encodeString(s string) []byte {

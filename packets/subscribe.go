@@ -33,7 +33,7 @@ func (s *SubscribePacket) CreateSubscribePacket(topic string) {
 // It sets default values where needed as well.
 func (s *SubscribePacket) CreatePacket() {
 	s.FixedHeader = FixedHeader{PacketType: subscribeType}
-	s.MessageId = []byte{0, 1}
+	s.MessageId = defaultMessageId
 	s.Qos = []byte{0}
 }
 

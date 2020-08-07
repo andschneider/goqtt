@@ -45,7 +45,7 @@ var defaultPackets = map[string]Packet{
 	"connect": &ConnectPacket{
 		FixedHeader:  FixedHeader{connectType, 17},
 		ProtocolName: "MQTT", ProtocolVersion: MQTT3,
-		ConnectFlags: 2, KeepAlive: []byte{0, 60},
+		ConnectFlags: 2, KeepAlive: defaultKeepAlive,
 		ClientIdentifier: "goqtt"},
 	"disconnect": &DisconnectPacket{
 		FixedHeader: FixedHeader{disconnectType, 0}},
@@ -59,18 +59,18 @@ var defaultPackets = map[string]Packet{
 	},
 	"suback": &SubackPacket{
 		FixedHeader: FixedHeader{subackType, 3},
-		MessageId:   []byte{0, 1}, ReturnCodes: []byte{0}},
+		MessageId:   defaultMessageId, ReturnCodes: []byte{0}},
 	"subscribe": &SubscribePacket{
 		FixedHeader: FixedHeader{subscribeType, 15},
-		MessageId:   []byte{0, 1}, Qos: []byte{0},
+		MessageId:   defaultMessageId, Qos: []byte{0},
 		Topics: []string{testTopic},
 	},
 	"unsuback": &UnsubackPacket{
 		FixedHeader: FixedHeader{unsubackType, 2},
-		MessageId:   []byte{0, 1}},
+		MessageId:   defaultMessageId},
 	"unsubscribe": &UnsubscribePacket{
 		FixedHeader: FixedHeader{unsubscribeType, 14},
-		MessageId:   []byte{0, 1},
+		MessageId:   defaultMessageId,
 		Topics:      []string{testTopic}},
 }
 

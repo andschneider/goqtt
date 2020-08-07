@@ -25,7 +25,7 @@ func (ua *UnsubackPacket) Name() string {
 // It sets default values where needed as well.
 func (ua *UnsubackPacket) CreatePacket() {
 	ua.FixedHeader = FixedHeader{PacketType: unsubackType}
-	ua.MessageId = []byte{0, 1}
+	ua.MessageId = defaultMessageId
 }
 
 func (ua *UnsubackPacket) String() string {
