@@ -23,41 +23,55 @@ func TestFixedHeader(t *testing.T) {
 }
 
 var (
-	testConnackPacket    = []byte{connackType.packetId, 2, 0, 0}
-	testConnectPacket    = []byte{connectType.packetId, 2, 0, 0}
-	testDisconnectPacket = []byte{disconnectType.packetId, 0}
-	testPingReqPacket    = []byte{pingReqType.packetId, 0}
-	testPingRespPacket   = []byte{pingRespType.packetId, 0}
-	testPublishPacket    = []byte{publishType.packetId, 0}
-	testSubackPacket     = []byte{subackType.packetId, 3, 0, 1, 0}
-	testSubscribePacket  = []byte{subscribeType.packetId, 3, 0, 1, 0}
-	testUnsubackPacket   = []byte{unsubackType.packetId, 2, 0, 1}
-	//testUnsubscribePacket = []byte{unsubscribeType.packetId, 14, 0, 1, 0, 10, 116, 101, 115, 116, 47, 116, 111, 112, 105, 99}
-	testUnsubscribePacket = append([]byte{unsubscribeType.packetId, 14, 0, 1, 0}, []byte("\ntest/topic")...)
+	testConnackPacket     = []byte{connackType.packetId, 2, 0, 0}
+	testConnectPacket     = []byte{connectType.packetId, 17, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 5, 103, 111, 113, 116, 116}
+	testDisconnectPacket  = []byte{disconnectType.packetId, 0}
+	testPingReqPacket     = []byte{pingReqType.packetId, 0}
+	testPingRespPacket    = []byte{pingRespType.packetId, 0}
+	testPublishPacket     = []byte{publishType.packetId, 23, 0, 10, 116, 101, 115, 116, 47, 116, 111, 112, 105, 99, 104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100}
+	testSubackPacket      = []byte{subackType.packetId, 3, 0, 1, 0}
+	testSubscribePacket   = []byte{subscribeType.packetId, 15, 0, 1, 0, 10, 116, 101, 115, 116, 47, 116, 111, 112, 105, 99, 0}
+	testUnsubackPacket    = []byte{unsubackType.packetId, 2, 0, 1}
+	testUnsubscribePacket = []byte{unsubscribeType.packetId, 14, 0, 1, 0, 10, 116, 101, 115, 116, 47, 116, 111, 112, 105, 99}
 )
 
 // defaultPackets are what the packet's CreatePacket is expected to create.
+//
+// In the cases of publish, subscribe, and unsubscribe packets they represent their
+// Create<type>Packet method with appropriate test values. e.g. CreatePublishPacket(testTopic)
 var defaultPackets = map[string]Packet{
 	"connack": &ConnackPacket{
 		FixedHeader: FixedHeader{connackType, 2}},
-	"connect": &ConnectPacket{},
+	"connect": &ConnectPacket{
+		FixedHeader:  FixedHeader{connectType, 17},
+		ProtocolName: "MQTT", ProtocolVersion: MQTT3,
+		ConnectFlags: 2, KeepAlive: []byte{0, 60},
+		ClientIdentifier: "goqtt"},
 	"disconnect": &DisconnectPacket{
 		FixedHeader: FixedHeader{disconnectType, 0}},
 	"pingreq": &PingReqPacket{
 		FixedHeader: FixedHeader{pingReqType, 0}},
 	"pingresp": &PingRespPacket{
 		FixedHeader: FixedHeader{pingRespType, 0}},
-	"publish": &PublishPacket{},
+	"publish": &PublishPacket{
+		FixedHeader: FixedHeader{publishType, 23},
+		Topic:       testTopic, Message: []byte(testMessage),
+	},
 	"suback": &SubackPacket{
 		FixedHeader: FixedHeader{subackType, 3},
 		MessageId:   []byte{0, 1}, ReturnCodes: []byte{0}},
-	"subscribe": &SubscribePacket{},
+	"subscribe": &SubscribePacket{
+		FixedHeader: FixedHeader{subscribeType, 15},
+		MessageId:   []byte{0, 1}, Qos: []byte{0},
+		Topics: []string{testTopic},
+	},
 	"unsuback": &UnsubackPacket{
 		FixedHeader: FixedHeader{unsubackType, 2},
 		MessageId:   []byte{0, 1}},
 	"unsubscribe": &UnsubscribePacket{
 		FixedHeader: FixedHeader{unsubscribeType, 14},
-		MessageId:   []byte{0, 1}, Topics: []string{testTopic}},
+		MessageId:   []byte{0, 1},
+		Topics:      []string{testTopic}},
 }
 
 var testCases = []struct {
@@ -93,7 +107,6 @@ func TestNewPacket(t *testing.T) {
 	}
 }
 
-// TODO add connect, publish, and subscribe packets
 // Test the default values set by the ReadPacket methods.
 func TestReadPacket(t *testing.T) {
 	for _, tc := range testCases {
@@ -110,7 +123,6 @@ func TestReadPacket(t *testing.T) {
 	}
 }
 
-// TODO connect, publish, and subscribe packets
 // Test the default values set by CreatePacket methods.
 func TestCreatePacket(t *testing.T) {
 	for _, tc := range testCases {
@@ -140,7 +152,7 @@ func TestCreatePacket(t *testing.T) {
 				t.Fatal(err)
 			}
 			if !bytes.Equal(tc.packetBytes, buf.Bytes()) {
-				t.Fatalf("expected %s, got %v", tc.packetBytes, buf)
+				t.Fatalf("expected %v, got %v", tc.packetBytes, buf)
 			}
 		})
 	}

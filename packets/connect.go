@@ -37,8 +37,13 @@ func (c *ConnectPacket) CreatePacket() {
 	c.ProtocolVersion = MQTT3
 	c.ConnectFlags = 2
 	c.KeepAlive = []byte{0, 60}
+	c.ClientIdentifier = "goqtt"
+	// TODO hostName() is making testing hard as it changes each time CreatePacket is called
+}
+
+func hostName() string {
 	hostname, _ := os.Hostname()
-	c.ClientIdentifier = hostname + strconv.Itoa(time.Now().Second())
+	return hostname + strconv.Itoa(time.Now().Second())
 }
 
 func (c *ConnectPacket) String() string {
