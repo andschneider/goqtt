@@ -18,21 +18,31 @@ var publishType = PacketType{
 	packetId: 48,
 }
 
+// Name returns the packet type name.
 func (p *PublishPacket) Name() string {
 	return p.name
 }
 
-func (p *PublishPacket) CreatePacket(topic string, message string) {
-	p.FixedHeader = FixedHeader{PacketType: publishType}
+// CreatePublishPacket wraps CreatePacket and adds a topic and a message.
+func (p *PublishPacket) CreatePublishPacket(topic, message string) {
+	p.CreatePacket()
 	p.Topic = topic
-	p.MessageId = []byte{0, 1}
 	p.Message = []byte(message)
+}
+
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
+func (p *PublishPacket) CreatePacket() {
+	p.FixedHeader = FixedHeader{PacketType: publishType}
+	p.MessageId = defaultMessageId
 }
 
 func (p *PublishPacket) String() string {
 	return fmt.Sprintf("%v topic: %s messageid: %v message: %s", p.FixedHeader, p.Topic, p.MessageId, p.Message)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (p *PublishPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -49,6 +59,8 @@ func (p *PublishPacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (p *PublishPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = publishType

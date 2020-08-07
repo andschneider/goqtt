@@ -24,24 +24,7 @@ builds:
   goarm:
     - 7
 
-- 
-  id: "broker"
-  dir: examples
-  main: ./broker/main.go
-  binary: examples/broker
-  env:
-    - CGO_ENABLED=0
-  goos:
-    - darwin
-    - linux
-  goarch:
-    - amd64
-    - arm64
-    - arm
-  goarm:
-    - 7
-
-- 
+-
   id: "publish"
   dir: examples
   main: ./publish/main.go
@@ -88,5 +71,6 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - 'README'
+      - '^docs:'
+      - '^test:'

@@ -16,18 +16,24 @@ var unsubackType = PacketType{
 	packetId: 176,
 }
 
+// Name returns the packet type name.
 func (ua *UnsubackPacket) Name() string {
 	return ua.name
 }
+
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
 func (ua *UnsubackPacket) CreatePacket() {
 	ua.FixedHeader = FixedHeader{PacketType: unsubackType}
-	ua.MessageId = []byte{0, 1}
+	ua.MessageId = defaultMessageId
 }
 
 func (ua *UnsubackPacket) String() string {
 	return fmt.Sprintf("%v messageid: %b", ua.FixedHeader, ua.MessageId)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (ua *UnsubackPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -42,6 +48,8 @@ func (ua *UnsubackPacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (ua *UnsubackPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = unsubackType

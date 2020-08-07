@@ -1,9 +1,9 @@
 /*
 This example subscribes to a MQTT broker will print any incoming messages to the terminal.
 
-to run: go run ./examples/simple/main.go
+to run: go run ./examples/simple/sub/main.go
 
-It is meant a simple example showing the shortest path to subscribing to a topic. Things like
+It is meant as a simple example showing the shortest path to subscribing to a topic. Things like
 error checking/handling are purposefully left out. To see a longer example, check out the
 'subscribe' example.
 */
@@ -18,7 +18,7 @@ import (
 
 func main() {
 	// Create Client
-	clientId := "simple"
+	clientId := "simple-sub"
 	keepAlive := 30 // seconds
 	broker := "mqtt.eclipse.org:1883"
 	topic := "goqtt"

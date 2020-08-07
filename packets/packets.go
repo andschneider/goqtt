@@ -1,3 +1,5 @@
+// Package packets make up the MQTT control packets and
+// their core functionality.
 package packets
 
 import (
@@ -11,21 +13,29 @@ import (
 
 const MQTT3 = 4 // 0000100 in binary
 
+var (
+	defaultKeepAlive = encodeUint16(60)
+	defaultMessageId = encodeUint16(1)
+)
+
+// Packet is the interface for working with MQTT packets.
 type Packet interface {
 	Name() string
-	//CreatePacket()
+	CreatePacket()
 	String() string
 	Write(io.Writer) error
 	Read(io.Reader) error
 }
 
-// PacketType represents the human readable name and the byte representation of the first byte of the packet header
+// PacketType represents the human readable name and the
+// byte representation of the first byte of the packet header.
 type PacketType struct {
 	name     string
 	packetId byte
 }
 
-// FixedHeader represents the packet type and the length of the remaining payload in the packet
+// FixedHeader represents the packet type and the length of the
+// remaining payload in the packet.
 type FixedHeader struct {
 	PacketType
 	RemainingLength int
@@ -35,13 +45,16 @@ func (fh *FixedHeader) String() string {
 	return fmt.Sprintf("%s remaining length: %d", fh.PacketType.name, fh.RemainingLength)
 }
 
+// WriteHeader writes the FixedHeader to a buffer.
+// It is called in a packet's Write method.
 func (fh *FixedHeader) WriteHeader() (header bytes.Buffer) {
 	header.WriteByte(fh.PacketType.packetId)
 	header.Write(encodeLength(fh.RemainingLength))
 	return
 }
 
-// Assumes the message type byte has already been read
+// read assumes the message type byte has already been read from the io.Reader.
+// This gets called inside each packets Read method.
 func (fh *FixedHeader) read(r io.Reader) (err error) {
 	fh.RemainingLength, err = decodeLength(r)
 	return err
@@ -66,8 +79,7 @@ func ReadPacket(r io.Reader) (Packet, error) {
 	return p, nil
 }
 
-// NewPacket creates an empty Packet according to the packetId parameter. The FixedHeader is set later in the packet's
-// Read method
+// NewPacket creates an empty Packet according to the packetId parameter.
 func NewPacket(packetId byte) (Packet, error) {
 	switch packetId {
 	case connackType.packetId:
@@ -113,23 +125,29 @@ func encodeLength(length int) []byte {
 }
 
 func decodeLength(r io.Reader) (int, error) {
-	var rLength uint32
-	var multiplier uint32
+	var multiplier uint32 = 1
+	var value uint32
 	b := make([]byte, 1)
-	for multiplier < 27 { //fix: Infinite '(digit & 128) == 1' will cause the dead loop
+	for {
 		_, err := io.ReadFull(r, b)
 		if err != nil {
 			return 0, err
 		}
-
 		digit := b[0]
-		rLength |= uint32(digit&127) << multiplier
+
+		value += uint32(digit&127) * multiplier
 		if (digit & 128) == 0 {
 			break
 		}
-		multiplier += 7
+		multiplier *= 128
 	}
-	return int(rLength), nil
+	return int(value), nil
+}
+
+func encodeUint16(i uint8) []byte {
+	e := make([]byte, 2)
+	binary.BigEndian.PutUint16(e, uint16(i))
+	return e
 }
 
 func encodeString(s string) []byte {

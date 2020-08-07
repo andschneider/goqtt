@@ -1,3 +1,5 @@
+// Package goqtt is a MQTT 3.1.1 client library.
+// It does not implement the full client specification, see README for more information.
 package goqtt
 
 import (
@@ -11,8 +13,8 @@ import (
 // ClientConfig holds the information needed to create a new Client
 type ClientConfig struct {
 	clientId  string
-	keepAlive int
-	broker    string // address and port
+	keepAlive int    // seconds
+	broker    string // address:port
 	topic     string
 }
 
@@ -96,7 +98,7 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-// sendPacket handles all the packets sent through the client's channel and writes them to the TCP connection
+// sendPackets handles all the packets sent through the client's channel and writes them to the TCP connection
 func (c *Client) sendPackets() {
 	for {
 		p := <-c.send

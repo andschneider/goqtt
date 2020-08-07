@@ -17,16 +17,16 @@ var subackType = PacketType{
 	packetId: 144,
 }
 
+// Name returns the packet type name.
 func (sa *SubackPacket) Name() string {
 	return sa.name
 }
 
-// CreatePacket creates a SubackPacket with hardcoded values for the message id and return codes
-// The return codes should be expanded to return multiple values, as determined by the number of topics
-// subscribed to.
+// CreatePacket creates a new packet with the appropriate FixedHeader.
+// It sets default values where needed as well.
 func (sa *SubackPacket) CreatePacket() {
 	sa.FixedHeader = FixedHeader{PacketType: subackType}
-	sa.MessageId = []byte{0, 1}
+	sa.MessageId = defaultMessageId
 	// TODO expand to more than one topic
 	sa.ReturnCodes = []byte{0}
 }
@@ -35,6 +35,8 @@ func (sa *SubackPacket) String() string {
 	return fmt.Sprintf("%v messageid: %b returncodes: %b", sa.FixedHeader, sa.MessageId, sa.ReturnCodes)
 }
 
+// Write creates the bytes.Buffer of the packet and writes them to
+// the supplied io.Writer.
 func (sa *SubackPacket) Write(w io.Writer) error {
 	var body bytes.Buffer
 	var err error
@@ -50,6 +52,8 @@ func (sa *SubackPacket) Write(w io.Writer) error {
 	return err
 }
 
+// Read creates the packet from an io.Reader. It assumes that the
+// first byte, the packet id, has already been read.
 func (sa *SubackPacket) Read(r io.Reader) error {
 	var fh FixedHeader
 	fh.PacketType = subackType
