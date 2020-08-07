@@ -71,5 +71,6 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - 'README'
+      - '^docs:'
+      - '^test:'
