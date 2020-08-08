@@ -14,7 +14,7 @@ import (
 func (c *Client) Subscribe() error {
 	// create packet
 	var p packets.SubscribePacket
-	p.CreateSubscribePacket(c.config.Topic)
+	p.CreateSubscribePacket(c.Config.topic)
 
 	c.stagePacket(&p)
 
@@ -30,7 +30,7 @@ func (c *Client) Subscribe() error {
 
 	// start a keepAlive process which will send Ping packets to prevent a disconnect
 	// TODO I don't think this should be called in here - should be a background thing for a Client
-	go c.keepAlive()
+	go c.keepAlivePing()
 	return nil
 }
 
@@ -38,7 +38,7 @@ func (c *Client) Subscribe() error {
 func (c *Client) Unsubscribe() error {
 	// create packet
 	var p packets.UnsubscribePacket
-	p.CreateUnsubscribePacket(c.config.Topic)
+	p.CreateUnsubscribePacket(c.Config.topic)
 
 	c.stagePacket(&p)
 
