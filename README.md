@@ -76,7 +76,7 @@ func main() {
 	defer client.Disconnect()
 
 	// Attempt to publish a message
-	err := client.SendPublish("hello world")
+	err := client.Publish("hello world")
 	if err != nil {
 		log.Printf("could not send message: %v\n", err)
 	}

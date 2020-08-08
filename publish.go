@@ -6,8 +6,8 @@ import (
 	"github.com/andschneider/goqtt/packets"
 )
 
-// SendPublish sends a given message to the topic specified by the Client.
-func (c *Client) SendPublish(message string) error {
+// Publish sends a given message to the topic specified by the Client.
+func (c *Client) Publish(message string) error {
 	// create packet
 	var p packets.PublishPacket
 	p.CreatePublishPacket(c.Config.topic, message)

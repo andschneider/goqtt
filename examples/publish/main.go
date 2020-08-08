@@ -65,7 +65,7 @@ func main() {
 	defer client.Disconnect()
 
 	// create publish packet
-	err = client.SendPublish(message)
+	err = client.Publish(message)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not send message")
 	}

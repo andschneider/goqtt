@@ -24,7 +24,7 @@ func ExampleClient_Subscribe() {
 }
 
 // This example subscribes to a MQTT broker will print any incoming messages to std out.
-func ExampleClient_SendPublish() {
+func ExampleClient_Publish() {
 	// Create Client
 	client := goqtt.NewClient("mqtt.eclipse.org")
 
@@ -33,7 +33,7 @@ func ExampleClient_SendPublish() {
 	defer client.Disconnect()
 
 	// Attempt to publish a message
-	err := client.SendPublish("hello world")
+	err := client.Publish("hello world")
 	if err != nil {
 		log.Printf("could not send message: %v\n", err)
 	}
