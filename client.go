@@ -1,136 +1,99 @@
-// Package goqtt is a MQTT 3.1.1 client library.
-// It does not implement the full client specification, see README for more information.
 package goqtt
 
 import (
 	"fmt"
 	"net"
-
-	"github.com/andschneider/goqtt/packets"
-	"github.com/rs/zerolog/log"
+	"os"
+	"strconv"
+	"time"
 )
 
-// ClientConfig holds the information needed to create a new Client
-type ClientConfig struct {
+// Default values for the Client configuration. See the DefaultClientId function for
+// the Client's default ClientId value.
+const (
+	DefaultPort      = "1883"
+	DefaultKeepAlive = 60 // seconds
+	DefaultTopic     = "goqtt"
+)
+
+// clientConfig holds the information needed to create a new Client.
+// As it's unexported these can't be set directly, instead use a functional
+// option, like Port.
+type clientConfig struct {
 	clientId  string
-	keepAlive int    // seconds
-	broker    string // address:port
-	topic     string
+	keepAlive int
+	// server is the address (IP or domain) of the broker.
+	server string
+	port   string
+	topic  string
 }
 
-// NewClientConfig creates a ClientConfig struct which can't be edited after it's created.
-func NewClientConfig(clientId string, keepAlive int, broker string, topic string) *ClientConfig {
-	return &ClientConfig{clientId: clientId, keepAlive: keepAlive, broker: broker, topic: topic}
-}
-
-// Client is the main interaction point for sending and receiving Packets. Using the configuration
-// set in the ClientConfig struct, an instantiated Client needs to call the Connect() method
-// before sending/receiving any packets.
+// Client is the main interaction point for sending and receiving Packets. An
+// instantiated Client needs to call the Connect() method before sending/receiving any packets.
 type Client struct {
-	config *ClientConfig
+	Config *clientConfig
 	conn   net.Conn
-
-	send chan packets.Packet
 }
 
-// NewClient creates a new Client based on the configuration values in the ClientConfig struct.
-func NewClient(config *ClientConfig) *Client {
-	return &Client{config: config}
-}
-
-// TODO might combine these Get helpers
-
-// GetClientId returns the current ClientId for the client.
-func (c *Client) GetClientId() string {
-	return c.config.clientId
-}
-
-// GetKeepAlive returns the current KeepAlive for the client.
-func (c *Client) GetKeepAlive() int {
-	return c.config.keepAlive
-}
-
-// GetBroker returns the current Broker for the client.
-func (c *Client) GetBroker() string {
-	return c.config.broker
-}
-
-// GetTopic returns the current Topic for the client.
-func (c *Client) GetTopic() string {
-	return c.config.topic
-}
-
-// Connect attempts to create a TCP connection to the broker specified in the client's ClientConfig.
-// It sends a CONNECT packet and reads the CONNACK packet.
-func (c *Client) Connect() error {
-	// connect over TCP
-	conn, err := net.Dial("tcp", c.config.broker)
-	if err != nil {
-		log.Error().Err(err).
-			Str("source", "goqtt").
-			Str("broker", c.config.broker).
-			Msg("could not connect to server")
-		return fmt.Errorf("could not connect to server: %v", err)
+// NewClient creates a Client struct which can be used to interact with a MQTT broker.
+// It sets default values for most of the configuration, so only a server address is
+// required to instantiate it. Other configuration options are available and can be
+// passed in as needed.
+func NewClient(addr string, opts ...option) *Client {
+	var c = &Client{}
+	// default configuration
+	d := &clientConfig{
+		clientId:  DefaultClientId(),
+		keepAlive: DefaultKeepAlive,
+		server:    addr,
+		port:      DefaultPort,
+		topic:     DefaultTopic,
 	}
-	c.conn = conn
-
-	c.send = make(chan packets.Packet)
-	go c.sendPackets()
-
-	// create Connect packet
-	var cp packets.ConnectPacket
-	cp.CreatePacket()
-	cp.KeepAlive = []byte{0, byte(c.config.keepAlive)}
-	cp.ClientIdentifier = c.config.clientId
-
-	// send packet
-	c.stagePacket(&cp)
-
-	// read response and verify it's a CONNACK packet
-	r, err := c.readResponse()
-	if err != nil {
-		return fmt.Errorf("could not read response for %s: %v", cp.Name(), err)
+	c.Config = d
+	// apply any other options that have been passed in
+	for _, opt := range opts {
+		opt(c)
 	}
-	if _, ok := r.(*packets.ConnackPacket); !ok {
-		typeErrorResponseLogger(cp.Name(), r.Name(), r)
-		return fmt.Errorf("did not receive a CONNACK packet, got %s instead", r.Name())
-	}
-	return nil
+	return c
 }
 
-// sendPackets handles all the packets sent through the client's channel and writes them to the TCP connection
-func (c *Client) sendPackets() {
-	for {
-		p := <-c.send
-		log.Debug().
-			Str("source", "goqtt").
-			Str("packetType", p.Name()).
-			Str("packet", p.String()).
-			Msg("send packet")
-		err := p.Write(c.conn)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("source", "goqtt").
-				Str("packetType", p.Name()).
-				Str("packet", p.String()).
-				Msg("could not send packet")
-		}
+// DefaultClientId creates a default value for the Client's clientId.
+// It uses the process id and the current time to try to prevent client collisions with the broker.
+func DefaultClientId() string {
+	cid := fmt.Sprintf("%s-%d-%s", "goqtt", os.Getpid(), strconv.Itoa(time.Now().Second()))
+	return cid
+}
+
+// option is a function used to modify/set a configuration field in a Client.
+type option func(*Client)
+
+// ClientId is the identifier you use to tell the MQTT broker who you are.
+// A broker will require unique ClientId's for all connected clients.
+func ClientId(cid string) option {
+	return func(c *Client) {
+		c.Config.clientId = cid
 	}
 }
 
-// Disconnect sends a DISCONNECT packet.
-func (c *Client) Disconnect() {
-	// create packet
-	var p packets.DisconnectPacket
-	p.CreatePacket()
-
-	err := p.Write(c.conn)
-	if err != nil {
-		log.Error().Err(err).Str("source", "goqtt").Msg("could not write Disconnect packet")
+// KeepAlive is the time in seconds that the broker should wait before
+// disconnecting you if no packets are sent.
+func KeepAlive(seconds int) option {
+	return func(c *Client) {
+		c.Config.keepAlive = seconds
 	}
-	err = c.conn.Close()
-	if err != nil {
-		log.Error().Err(err).Str("source", "goqtt").Msg("could not close Client connection")
+}
+
+// Port is the port number of the server. Usually 1883 (insecure) or 8883 (TLS).
+func Port(port string) option {
+	return func(c *Client) {
+		c.Config.port = port
+	}
+}
+
+// Topic is the fully qualified topic to subscribe or publish to.
+// Only single topics and no wildcards are accepted at this time.
+func Topic(topic string) option {
+	return func(c *Client) {
+		c.Config.topic = topic
 	}
 }

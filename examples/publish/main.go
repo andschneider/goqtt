@@ -8,7 +8,6 @@ different host name or IP address with the -server flag.
 
 To change the topic and message, use the -topic and -message flags, respectively.
 */
-
 package main
 
 import (
@@ -49,8 +48,7 @@ func config() (*goqtt.Client, string) {
 		Int("keepAlive", keepAlive).
 		Str("topic", *topic).
 		Msg("client configuration")
-	copts := goqtt.NewClientConfig(clientId, keepAlive, broker, *topic)
-	client := goqtt.NewClient(copts)
+	client := goqtt.NewClient(*server, goqtt.ClientId(clientId), goqtt.KeepAlive(keepAlive), goqtt.Port(*port))
 	return client, *message
 }
 
@@ -67,7 +65,7 @@ func main() {
 	defer client.Disconnect()
 
 	// create publish packet
-	err = client.SendPublish(message)
+	err = client.Publish(message)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not send message")
 	}

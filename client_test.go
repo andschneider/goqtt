@@ -1,32 +1,53 @@
-package goqtt_test
+package goqtt
 
 import (
 	"testing"
-
-	"github.com/andschneider/goqtt"
 )
 
-var (
-	clientID  = "testClient"
+const (
+	clientID  = "goqtt-testclient"
 	keepAlive = 10
-	broker    = ""
-	topic     = "test"
+	server    = "mqtt.eclipse.org"
+	port      = "1883"
+	topic     = "goqtt-test"
 )
 
-func TestNewClientConfig(t *testing.T) {
-	cc := goqtt.NewClientConfig(clientID, keepAlive, broker, topic)
-	c := goqtt.NewClient(cc)
+func TestNewClientConfig_Default(t *testing.T) {
+	c := NewClient(server)
 
-	if c.GetClientId() != clientID {
-		t.Errorf("clientIDs don't match. got %s, expected %s", c.GetClientId(), clientID)
+	if c.Config.topic != DefaultTopic {
+		t.Fatalf("default topic error. got %s, want %s", c.Config.topic, DefaultTopic)
 	}
-	if c.GetKeepAlive() != keepAlive {
-		t.Errorf("keepAlives don't match. got %d, expected %d", c.GetKeepAlive(), keepAlive)
+	if c.Config.port != DefaultPort {
+		t.Fatalf("default port error. got %s, want %s", c.Config.port, DefaultPort)
 	}
-	if c.GetBroker() != broker {
-		t.Errorf("brokers don't match. got %s, expected %s", c.GetBroker(), broker)
+	if c.Config.keepAlive != DefaultKeepAlive {
+		t.Fatalf("default keep alive error. got %d, want %d", c.Config.keepAlive, DefaultKeepAlive)
 	}
-	if c.GetTopic() != topic {
-		t.Errorf("topics don't match. got %s, expected %s", c.GetTopic(), topic)
+}
+
+func TestOptions(t *testing.T) {
+	// set config options
+	cid := ClientId(clientID)
+	ka := KeepAlive(keepAlive)
+	p := Port(port)
+	tp := Topic(topic)
+
+	c := NewClient(server, cid, p, tp, ka)
+
+	if c.Config.clientId != clientID {
+		t.Fatalf("keep alive. got %s, want %s", c.Config.clientId, clientID)
+	}
+	if c.Config.keepAlive != keepAlive {
+		t.Fatalf("keep alive. got %d, want %d", c.Config.keepAlive, keepAlive)
+	}
+	if c.Config.port != port {
+		t.Fatalf("port error. got %s, want %s", c.Config.port, port)
+	}
+	if c.Config.topic != topic {
+		t.Fatalf("topic error. got %s, want %s", c.Config.topic, topic)
+	}
+	if c.Config.server != server {
+		t.Fatalf("server error. got %s, want %s", c.Config.server, server)
 	}
 }

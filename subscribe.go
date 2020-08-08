@@ -14,9 +14,12 @@ import (
 func (c *Client) Subscribe() error {
 	// create packet
 	var p packets.SubscribePacket
-	p.CreateSubscribePacket(c.config.topic)
+	p.CreateSubscribePacket(c.Config.topic)
 
-	c.stagePacket(&p)
+	err := c.sendPacket(&p)
+	if err != nil {
+		return fmt.Errorf("could not write Subscribe packet: %v", err)
+	}
 
 	// read response and verify it's a SUBACK packet
 	r, err := c.readResponse()
@@ -30,7 +33,7 @@ func (c *Client) Subscribe() error {
 
 	// start a keepAlive process which will send Ping packets to prevent a disconnect
 	// TODO I don't think this should be called in here - should be a background thing for a Client
-	go c.keepAlive()
+	go c.keepAlivePing()
 	return nil
 }
 
@@ -38,9 +41,12 @@ func (c *Client) Subscribe() error {
 func (c *Client) Unsubscribe() error {
 	// create packet
 	var p packets.UnsubscribePacket
-	p.CreateUnsubscribePacket(c.config.topic)
+	p.CreateUnsubscribePacket(c.Config.topic)
 
-	c.stagePacket(&p)
+	err := c.sendPacket(&p)
+	if err != nil {
+		return fmt.Errorf("could not write Unsubscribe packet: %v", err)
+	}
 
 	// read response and verify it's a UNSUBACK packet
 	r, err := c.readResponse()
