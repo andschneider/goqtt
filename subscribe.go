@@ -14,7 +14,7 @@ import (
 func (c *Client) Subscribe() error {
 	// create packet
 	var p packets.SubscribePacket
-	p.CreateSubscribePacket(c.config.topic)
+	p.CreateSubscribePacket(c.config.Topic)
 
 	c.stagePacket(&p)
 
@@ -38,7 +38,7 @@ func (c *Client) Subscribe() error {
 func (c *Client) Unsubscribe() error {
 	// create packet
 	var p packets.UnsubscribePacket
-	p.CreateUnsubscribePacket(c.config.topic)
+	p.CreateUnsubscribePacket(c.config.Topic)
 
 	c.stagePacket(&p)
 

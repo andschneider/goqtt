@@ -19,12 +19,14 @@ import (
 
 func main() {
 	// Create Client
-	clientId := "simple-pub"
-	keepAlive := 30 // seconds
-	broker := "mqtt.eclipse.org:1883"
-	topic := "goqtt"
-
-	client := goqtt.NewClient(goqtt.NewClientConfig(clientId, keepAlive, broker, topic))
+	cfg := &goqtt.ClientConfig{
+		ClientId:  "simple-pub",
+		KeepAlive: 30,
+		Server:    "mqtt.eclipse.org",
+		Port:      "1883",
+		Topic:     "goqtt",
+	}
+	client, _ := goqtt.NewClient(cfg)
 
 	// Attempt a connection to the specified MQTT broker
 	client.Connect()

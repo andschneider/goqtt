@@ -26,7 +26,7 @@ func (c *Client) SendPing() error {
 // is possibly wasteful as Pings only need to be sent if no other Packets have been sent in the
 // time specified by the KeepAlive. More sophisticated timing logic could be added later.
 func (c *Client) keepAlive() {
-	ticker := time.NewTicker(time.Duration(c.config.keepAlive) * time.Second)
+	ticker := time.NewTicker(time.Duration(c.config.KeepAlive) * time.Second)
 	for {
 		<-ticker.C
 		err := c.SendPing()

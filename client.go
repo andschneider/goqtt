@@ -12,15 +12,19 @@ import (
 
 // ClientConfig holds the information needed to create a new Client
 type ClientConfig struct {
-	clientId  string
-	keepAlive int    // seconds
-	broker    string // address:port
-	topic     string
-}
-
-// NewClientConfig creates a ClientConfig struct which can't be edited after it's created.
-func NewClientConfig(clientId string, keepAlive int, broker string, topic string) *ClientConfig {
-	return &ClientConfig{clientId: clientId, keepAlive: keepAlive, broker: broker, topic: topic}
+	// ClientId is the identifier you use to tell the MQTT broker who you are.
+	// A broker will require unique ClientId's for all connected clients.
+	ClientId string
+	// KeepAlive is the time in seconds that the broker should wait before disconnecting
+	// you if no packets are sent.
+	KeepAlive int
+	// Server is the address (IP or domain) of the broker.
+	Server string
+	// Port is the port number of the broker. Usually 1883 (insecure) or 8883 (TLS).
+	Port string
+	// Topic is the full qualified topic to subscribe or publish to.
+	// Only single topics and no wildcards are accepted at this time.
+	Topic string
 }
 
 // Client is the main interaction point for sending and receiving Packets. Using the configuration
@@ -34,41 +38,26 @@ type Client struct {
 }
 
 // NewClient creates a new Client based on the configuration values in the ClientConfig struct.
-func NewClient(config *ClientConfig) *Client {
-	return &Client{config: config}
-}
-
-// TODO might combine these Get helpers
-
-// GetClientId returns the current ClientId for the client.
-func (c *Client) GetClientId() string {
-	return c.config.clientId
-}
-
-// GetKeepAlive returns the current KeepAlive for the client.
-func (c *Client) GetKeepAlive() int {
-	return c.config.keepAlive
-}
-
-// GetBroker returns the current Broker for the client.
-func (c *Client) GetBroker() string {
-	return c.config.broker
-}
-
-// GetTopic returns the current Topic for the client.
-func (c *Client) GetTopic() string {
-	return c.config.topic
+func NewClient(config *ClientConfig) (*Client, error) {
+	if config.Server == "" {
+		return nil, fmt.Errorf("ClientConfig: Server must be set")
+	}
+	if config.Port == "" {
+		return nil, fmt.Errorf("ClientConfig: Port must be set")
+	}
+	return &Client{config: config}, nil
 }
 
 // Connect attempts to create a TCP connection to the broker specified in the client's ClientConfig.
 // It sends a CONNECT packet and reads the CONNACK packet.
 func (c *Client) Connect() error {
 	// connect over TCP
-	conn, err := net.Dial("tcp", c.config.broker)
+	b := fmt.Sprintf("%s:%s", c.config.Server, c.config.Port)
+	conn, err := net.Dial("tcp", b)
 	if err != nil {
 		log.Error().Err(err).
 			Str("source", "goqtt").
-			Str("broker", c.config.broker).
+			Str("broker", b).
 			Msg("could not connect to server")
 		return fmt.Errorf("could not connect to server: %v", err)
 	}
@@ -80,8 +69,8 @@ func (c *Client) Connect() error {
 	// create Connect packet
 	var cp packets.ConnectPacket
 	cp.CreatePacket()
-	cp.KeepAlive = []byte{0, byte(c.config.keepAlive)}
-	cp.ClientIdentifier = c.config.clientId
+	cp.KeepAlive = []byte{0, byte(c.config.KeepAlive)}
+	cp.ClientIdentifier = c.config.ClientId
 
 	// send packet
 	c.stagePacket(&cp)

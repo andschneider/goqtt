@@ -7,26 +7,40 @@ import (
 )
 
 var (
-	clientID  = "testClient"
+	clientID  = "goqtt-testclient"
 	keepAlive = 10
-	broker    = ""
-	topic     = "test"
+	server    = "mqtt.eclipse.org"
+	port      = "1883"
+	topic     = "goqtt-test"
 )
 
 func TestNewClientConfig(t *testing.T) {
-	cc := goqtt.NewClientConfig(clientID, keepAlive, broker, topic)
-	c := goqtt.NewClient(cc)
+	cc := &goqtt.ClientConfig{
+		ClientId:  clientID,
+		KeepAlive: keepAlive,
+		Server:    server,
+		Port:      port,
+		Topic:     topic,
+	}
+	c, err := goqtt.NewClient(cc)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if c.GetClientId() != clientID {
-		t.Errorf("clientIDs don't match. got %s, expected %s", c.GetClientId(), clientID)
+	err = c.Connect()
+	if err != nil {
+		t.Fatal(err)
 	}
-	if c.GetKeepAlive() != keepAlive {
-		t.Errorf("keepAlives don't match. got %d, expected %d", c.GetKeepAlive(), keepAlive)
+}
+func TestNewClientConfig_Default(t *testing.T) {
+	cc := &goqtt.ClientConfig{}
+	c, err := goqtt.NewClient(cc)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if c.GetBroker() != broker {
-		t.Errorf("brokers don't match. got %s, expected %s", c.GetBroker(), broker)
-	}
-	if c.GetTopic() != topic {
-		t.Errorf("topics don't match. got %s, expected %s", c.GetTopic(), topic)
+
+	err = c.Connect()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
