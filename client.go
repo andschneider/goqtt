@@ -6,8 +6,6 @@ import (
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/andschneider/goqtt/packets"
 )
 
 // Default values for the Client configuration. See the DefaultClientId function for
@@ -35,8 +33,6 @@ type clientConfig struct {
 type Client struct {
 	Config *clientConfig
 	conn   net.Conn
-
-	send chan packets.Packet
 }
 
 // NewClient creates a Client struct which can be used to interact with a MQTT broker.
@@ -64,7 +60,6 @@ func NewClient(addr string, opts ...option) *Client {
 // DefaultClientId creates a default value for the Client's clientId.
 // It uses the process id and the current time to try to prevent client collisions with the broker.
 func DefaultClientId() string {
-	// create a default ClientId based on time to reduce collisions in the broker
 	cid := fmt.Sprintf("%s-%d-%s", "goqtt", os.Getpid(), strconv.Itoa(time.Now().Second()))
 	return cid
 }

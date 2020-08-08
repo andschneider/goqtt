@@ -16,7 +16,10 @@ func (c *Client) Subscribe() error {
 	var p packets.SubscribePacket
 	p.CreateSubscribePacket(c.Config.topic)
 
-	c.stagePacket(&p)
+	err := c.sendPacket(&p)
+	if err != nil {
+		return fmt.Errorf("could not write Subscribe packet: %v", err)
+	}
 
 	// read response and verify it's a SUBACK packet
 	r, err := c.readResponse()
@@ -40,7 +43,10 @@ func (c *Client) Unsubscribe() error {
 	var p packets.UnsubscribePacket
 	p.CreateUnsubscribePacket(c.Config.topic)
 
-	c.stagePacket(&p)
+	err := c.sendPacket(&p)
+	if err != nil {
+		return fmt.Errorf("could not write Unsubscribe packet: %v", err)
+	}
 
 	// read response and verify it's a UNSUBACK packet
 	r, err := c.readResponse()
