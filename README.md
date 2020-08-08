@@ -32,7 +32,7 @@ import (
 
 func main() {
 	// Create Client
-    topic := goqtt.Topic("goqtt")
+	topic := goqtt.Topic("goqtt")
 	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
 	// Attempt a connection to the specified MQTT broker
@@ -68,7 +68,7 @@ import (
 
 func main() {
 	// Create Client
-    topic := goqtt.Topic("goqtt")
+	topic := goqtt.Topic("goqtt")
 	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
 	// Attempt a connection to the specified MQTT broker
