@@ -1,5 +1,3 @@
-// Package goqtt is a MQTT 3.1.1 client library.
-// It does not implement the full client specification, see README for more information.
 package goqtt
 
 import (
@@ -10,7 +8,14 @@ import (
 	"time"
 
 	"github.com/andschneider/goqtt/packets"
-	"github.com/rs/zerolog/log"
+)
+
+// Default values for the Client configuration. See the DefaultClientId function for
+// the Client's default ClientId value.
+const (
+	DefaultPort      = "1883"
+	DefaultKeepAlive = 60 // seconds
+	DefaultTopic     = "goqtt"
 )
 
 // clientConfig holds the information needed to create a new Client.
@@ -40,15 +45,13 @@ type Client struct {
 // passed in as needed.
 func NewClient(addr string, opts ...option) *Client {
 	var c = &Client{}
-	// create a default ClientId based on time to reduce collisions in the broker
-	cid := fmt.Sprintf("%s-%d-%s", "goqtt", os.Getpid(), strconv.Itoa(time.Now().Second()))
 	// default configuration
 	d := &clientConfig{
-		clientId:  cid,
-		keepAlive: 60,
+		clientId:  DefaultClientId(),
+		keepAlive: DefaultKeepAlive,
 		server:    addr,
-		port:      "1883",
-		topic:     "goqtt",
+		port:      DefaultPort,
+		topic:     DefaultTopic,
 	}
 	c.Config = d
 	// apply any other options that have been passed in
@@ -56,6 +59,14 @@ func NewClient(addr string, opts ...option) *Client {
 		opt(c)
 	}
 	return c
+}
+
+// DefaultClientId creates a default value for the Client's clientId.
+// It uses the process id and the current time to try to prevent client collisions with the broker.
+func DefaultClientId() string {
+	// create a default ClientId based on time to reduce collisions in the broker
+	cid := fmt.Sprintf("%s-%d-%s", "goqtt", os.Getpid(), strconv.Itoa(time.Now().Second()))
+	return cid
 }
 
 // option is a function used to modify/set a configuration field in a Client.
@@ -89,81 +100,5 @@ func Port(port string) option {
 func Topic(topic string) option {
 	return func(c *Client) {
 		c.Config.topic = topic
-	}
-}
-
-// Connect attempts to create a TCP connection to the broker specified in the client's ClientConfig.
-// It sends a CONNECT packet and reads the CONNACK packet.
-func (c *Client) Connect() error {
-	// connect over TCP
-	b := fmt.Sprintf("%s:%s", c.Config.server, c.Config.port)
-	conn, err := net.Dial("tcp", b)
-	if err != nil {
-		log.Error().Err(err).
-			Str("source", "goqtt").
-			Str("broker", b).
-			Msg("could not connect to server")
-		return fmt.Errorf("could not connect to server: %v", err)
-	}
-	c.conn = conn
-
-	c.send = make(chan packets.Packet)
-	go c.sendPackets()
-
-	// create Connect packet
-	var cp packets.ConnectPacket
-	cp.CreatePacket()
-	cp.KeepAlive = []byte{0, byte(c.Config.keepAlive)}
-	cp.ClientIdentifier = c.Config.clientId
-
-	// send packet
-	c.stagePacket(&cp)
-
-	// read response and verify it's a CONNACK packet
-	r, err := c.readResponse()
-	if err != nil {
-		return fmt.Errorf("could not read response for %s: %v", cp.Name(), err)
-	}
-	if _, ok := r.(*packets.ConnackPacket); !ok {
-		typeErrorResponseLogger(cp.Name(), r.Name(), r)
-		return fmt.Errorf("did not receive a CONNACK packet, got %s instead", r.Name())
-	}
-	return nil
-}
-
-// sendPackets handles all the packets sent through the client's channel and writes them to the TCP connection
-func (c *Client) sendPackets() {
-	for {
-		p := <-c.send
-		log.Debug().
-			Str("source", "goqtt").
-			Str("packetType", p.Name()).
-			Str("packet", p.String()).
-			Msg("send packet")
-		err := p.Write(c.conn)
-		if err != nil {
-			log.Error().
-				Err(err).
-				Str("source", "goqtt").
-				Str("packetType", p.Name()).
-				Str("packet", p.String()).
-				Msg("could not send packet")
-		}
-	}
-}
-
-// Disconnect sends a DISCONNECT packet.
-func (c *Client) Disconnect() {
-	// create packet
-	var p packets.DisconnectPacket
-	p.CreatePacket()
-
-	err := p.Write(c.conn)
-	if err != nil {
-		log.Error().Err(err).Str("source", "goqtt").Msg("could not write Disconnect packet")
-	}
-	err = c.conn.Close()
-	if err != nil {
-		log.Error().Err(err).Str("source", "goqtt").Msg("could not close Client connection")
 	}
 }

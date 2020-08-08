@@ -6,10 +6,9 @@ to run: go run ./examples/subscribe/main.go
 The default broker is the publicly available server hosted by the Eclipse foundation, but can be changed by specifying a
 different host name or IP address with the -server flag.
 
-The default topic is "hello/world", which may or may not have any messages being published to it (if using the Eclipse
+The default topic is "goqtt", which may or may not have any messages being published to it (if using the Eclipse
 server). If nothing shows up, try a different topic or publish a message using the publish.go example.
 */
-
 package main
 
 import (

@@ -6,7 +6,6 @@ to run: go run ./examples/connect/main.go
 The default broker is the publicly available server hosted by the Eclipse foundation, but can be changed by specifying a
 different host name or IP address with the -server flag.
 */
-
 package main
 
 import (

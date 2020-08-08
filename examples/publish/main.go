@@ -8,7 +8,6 @@ different host name or IP address with the -server flag.
 
 To change the topic and message, use the -topic and -message flags, respectively.
 */
-
 package main
 
 import (
