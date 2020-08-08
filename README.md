@@ -32,12 +32,8 @@ import (
 
 func main() {
 	// Create Client
-	clientId := "simple-sub"
-	keepAlive := 30 // seconds
-	broker := "mqtt.eclipse.org:1883"
-	topic := "goqtt"
-
-	client := goqtt.NewClient(goqtt.NewClientConfig(clientId, keepAlive, broker, topic))
+    topic := goqtt.Topic("goqtt")
+	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
 	// Attempt a connection to the specified MQTT broker
 	client.Connect()
@@ -65,19 +61,15 @@ Below is a simple example showing how to Publish a message to a specified topic.
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/andschneider/goqtt"
 )
 
 func main() {
 	// Create Client
-	clientId := "simple-pub"
-	keepAlive := 30 // seconds
-	broker := "mqtt.eclipse.org:1883"
-	topic := "goqtt"
-
-	client := goqtt.NewClient(goqtt.NewClientConfig(clientId, keepAlive, broker, topic))
+    topic := goqtt.Topic("goqtt")
+	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
 	// Attempt a connection to the specified MQTT broker
 	client.Connect()
@@ -86,11 +78,10 @@ func main() {
 	// Attempt to publish a message
 	err := client.SendPublish("hello world")
 	if err != nil {
-		fmt.Printf("could not send message: %v\n", err)
+		log.Printf("could not send message: %v\n", err)
 	}
 }
 ```
-
 
 ### more 
 

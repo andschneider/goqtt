@@ -49,8 +49,7 @@ func config() *goqtt.Client {
 		Int("keepAlive", keepAlive).
 		Str("topic", *topic).
 		Msg("client configuration")
-	copts := goqtt.NewClientConfig(clientId, keepAlive, broker, *topic)
-	client := goqtt.NewClient(copts)
+	client := goqtt.NewClient(*server, goqtt.ClientId(clientId), goqtt.KeepAlive(keepAlive), goqtt.Port(*port))
 	return client
 }
 
