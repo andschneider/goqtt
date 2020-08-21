@@ -1,9 +1,11 @@
-# goqtt
+<p align="left"><img src="logo.png" width="150" height="150"></p>
 
 ![Build](https://github.com/andschneider/goqtt/workflows/Build/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/andschneider/goqtt)](https://goreportcard.com/report/github.com/andschneider/goqtt)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/andschneider/goqtt)](https://pkg.go.dev/mod/github.com/andschneider/goqtt)
 [![License: MIT](https://img.shields.io/github/license/andschneider/goqtt)](https://img.shields.io/github/license/andschneider/goqtt)
+
+# goqtt
 
 goqtt is a simple MQTT client library. It is intended for lightweight MQTT applications where security and data guarantees are not important (see [limitations](https://github.com/andschneider/goqtt#limitations) below).
 
