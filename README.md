@@ -1,4 +1,4 @@
-<p align="left"><img src="logo.png" width="150" height="150"></p>
+<p align="left"><img src="logo.png" width="300" height="300"></p>
 
 ![Build](https://github.com/andschneider/goqtt/workflows/Build/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/andschneider/goqtt)](https://goreportcard.com/report/github.com/andschneider/goqtt)
