@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
-	"strconv"
-	"time"
 )
 
 type ConnectPacket struct {
@@ -29,22 +26,53 @@ func (c *ConnectPacket) Name() string {
 	return c.name
 }
 
+func (c *ConnectPacket) CreateConnectPacket(keepAlive int8, clientId string) {
+
+}
+
 // CreatePacket creates a new packet with the appropriate FixedHeader.
 // It sets default values where needed as well.
 func (c *ConnectPacket) CreatePacket() {
 	c.FixedHeader = FixedHeader{PacketType: connectType}
 	c.ProtocolName = "MQTT"
 	c.ProtocolVersion = MQTT3
-	c.ConnectFlags = 2
+	c.ConnectFlags = connectFlags()
 	c.KeepAlive = defaultKeepAlive
 	c.ClientIdentifier = "goqtt"
 	// TODO hostName() is making testing hard as it changes each time CreatePacket is called
 }
 
-func hostName() string {
-	hostname, _ := os.Hostname()
-	return hostname + strconv.Itoa(time.Now().Second())
+// connectFlags sets the Connect Flag byte in the ConnectPacket.
+// It is normally used for specifying the desired behavior of the
+// MQTT connection. However, currently goqtt limits these options
+// to only the clean session flag (everything else is off). The
+// clean session, as it's set to 1, tells the broker to disregard
+// any previous Session information. The new Session will last as
+// long as the network connection.
+//
+// For more information, please see section 3.1.2.3 of the MQTT
+// 3.1.1 specification.
+func connectFlags() byte {
+	// these are the optional flags. reserved should never be
+	// called, but the others can be combined.
+	const (
+		reserved = 1 << iota
+		cleanSession
+		willFlag
+		willQoS_1
+		willQoS_2
+		willRetain
+		password
+		username
+	)
+	//example := cleanSession | willFlag
+	return cleanSession
 }
+
+//func hostName() string {
+//	hostname, _ := os.Hostname()
+//	return hostname + strconv.Itoa(time.Now().Second())
+//}
 
 func (c *ConnectPacket) String() string {
 	return fmt.Sprintf("%v protocolname: %v protocolversion: %v connectflags: %08b clientid: %s", c.FixedHeader, c.ProtocolName, c.ProtocolVersion, c.ConnectFlags, c.ClientIdentifier)
