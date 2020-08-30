@@ -31,9 +31,6 @@ func (c *Client) Subscribe() error {
 		return fmt.Errorf("did not receive a SUBACK packet, got %s instead", r.Name())
 	}
 
-	// start a keepAlive process which will send Ping packets to prevent a disconnect
-	// TODO I don't think this should be called in here - should be a background thing for a Client
-	go c.keepAlivePing()
 	return nil
 }
 
