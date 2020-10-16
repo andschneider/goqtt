@@ -21,7 +21,7 @@ Using go `1.13` or higher, install using go modules:
 
 ### subscription
 
-Below is a simple example showing a subscription to a specified topic. Any Publish message received on the topic will be returned, allowing for further processing if desired. *Note: there is no error handling in the example, which is not advised.*
+Below is an example showing how to subscribe to a specified topic. Any Publish message received on the topic will be returned, allowing for further processing if desired.
 
 ```go
 package main
@@ -37,17 +37,26 @@ func main() {
 	topic := goqtt.Topic("goqtt")
 	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
-	// Attempt a connection to the specified MQTT broker
-	client.Connect()
+	// Connect to the specified MQTT broker
+	err := client.Connect()
+	if err != nil {
+		log.Fatalf("could not connect to broker: %v\n", err)
+	}
 	defer client.Disconnect()
 
-	// Attempt to subscribe to the topic
-	client.Subscribe()
+	// Subscribe to the topic
+	err = client.Subscribe()
+	if err != nil {
+		log.Fatalf("could not subscribe to topic: %v\n", err)
+	}
 
 	// Read messages indefinitely
 	for {
 		log.Println("waiting for message")
-		m, _ := client.ReadLoop()
+		m, err := client.ReadLoop()
+		if err != nil {
+			log.Printf("error when reading in message: %v\n", err)
+		}
 		if m != nil {
 			log.Printf("received message: '%s' from topic: '%s'", string(m.Message), m.Topic)
 		}
@@ -57,7 +66,7 @@ func main() {
 
 ### publish
 
-Below is a simple example showing how to Publish a message to a specified topic. *Note: there is no error handling in the example, which is not advised.*
+Below is an example showing how to Publish a message to a specified topic.
 
 ```go
 package main
@@ -73,12 +82,15 @@ func main() {
 	topic := goqtt.Topic("goqtt")
 	client := goqtt.NewClient("mqtt.eclipse.org", topic)
 
-	// Attempt a connection to the specified MQTT broker
-	client.Connect()
+	// Connect to the specified MQTT broker
+	err := client.Connect()
+	if err != nil {
+		log.Fatalf("could not connect to broker: %v\n", err)
+	}
 	defer client.Disconnect()
 
-	// Attempt to publish a message
-	err := client.Publish("hello world")
+	// Publish a message to the topic
+	err = client.Publish("hello world")
 	if err != nil {
 		log.Printf("could not send message: %v\n", err)
 	}
@@ -87,7 +99,7 @@ func main() {
 
 ### more 
 
-There are more examples in the `examples` folder, with proper error handling and some logging:
+There are more examples in the `examples` folder. They have more client options exposed and produce verbose logging:
 
 - connect and disconnect to a broker
 - publishing a message a topic
